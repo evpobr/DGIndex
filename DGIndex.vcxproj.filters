@@ -148,4 +148,7 @@
     <NASM Include="simple_idct_mmx.asm" />
     <NASM Include="skl_dct_sse.asm" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="app.manifest" />
+  </ItemGroup>
 </Project>

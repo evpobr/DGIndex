@@ -616,6 +616,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	int i, j;
 
+	
+
 	WNDCLASS rwc = {0};
 
 	switch (message)
