@@ -476,14 +476,21 @@ XTN void CheckFlag(void);
 XTN int parse_cli(LPSTR lpCmdLine, LPSTR ucCmdLine);
 
 /* idct */
-extern "C" void __fastcall MMX_IDCT(short *block);
-extern "C" void __fastcall SSEMMX_IDCT(short *block);
-extern "C" void __fastcall SSE2MMX_IDCT(short *block);
+
+extern "C" void idct_mmx(short *block);
+extern "C" void idct_xmm(short *block);
+extern "C" void idct_sse2_dmitry(short *block);
+
 XTN void Initialize_FPU_IDCT(void);
 XTN void FPU_IDCT(short *block);
 XTN void __fastcall REF_IDCT(short *block);
 extern "C" void __fastcall Skl_IDct16_Sparse_SSE(short *block);
 extern "C" void __fastcall simple_idct_mmx(short *block);
+
+#define MMX_IDCT idct_mmx
+#define SSEMMX_IDCT idct_xmm
+#define SSE2MMX_IDCT idct_sse2_dmitry
+
 
 /* motion.c */
 XTN void motion_vectors(int PMV[2][2][2], int dmvector[2], int motion_vertical_field_select[2][2], 
