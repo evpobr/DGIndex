@@ -22,7 +22,7 @@
  */
 #define _WIN32_WINNT 0x0501 // Needed for WM_MOUSEWHEEL
 
-// #ifdef _UNICODE // disabled because works for non-unicode applications as well
+// #ifdef _UNICODE // disabled because works for non-unicode as well
 #if defined _M_IX86
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #elif defined _M_IA64
