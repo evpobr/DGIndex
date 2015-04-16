@@ -428,18 +428,21 @@ IDI_SMALL               ICON                    "movie.ico"
  FILEFLAGS 0x0L
 #endif
  FILEOS 0x4L
- FILETYPE 0x0L
+ FILETYPE 0x1L
  FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "DGIndex is the indexing component of DGMPGDec, an MPEG decoding and frame serving utility."
             VALUE "CompanyName", "Freeware licensed under GPL"
-            VALUE "FileVersion", "1.5.8"
+            VALUE "FileDescription", "DGIndex is the indexing component of DGMPGDec, an MPEG decoding and frame serving utility."
+            VALUE "FileVersion", "1.5.8.0"
+            VALUE "InternalName", "DGIndex.exe"
             VALUE "LegalCopyright", "Copyright (C) 2001-2010 Donald A. Graft"
             VALUE "OriginalFilename", "DGIndex.exe"
+            VALUE "ProductName", "DGMPGDec"
+            VALUE "ProductVersion", "1.5.8.0"
         END
     END
     BLOCK "VarFileInfo"
