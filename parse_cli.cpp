@@ -411,7 +411,7 @@ another:
 					CheckMenuItem(hMenu, IDM_DSDOWN, MF_UNCHECKED);
 					while (*p == ' ' || *p == '\t') p++;
 
-					DSDown_Flag = *p++ - '0';
+					DSDown_Flag = (*p++ - '0') != 0;
 					if (DSDown_Flag)
 					  CheckMenuItem(hMenu, IDM_DSDOWN, MF_CHECKED);
 				}
@@ -1031,7 +1031,7 @@ another:
 		{
 			ptr = lpCmdLine + (ptr - ucCmdLine);
 			CheckMenuItem(hMenu, IDM_DSDOWN, MF_UNCHECKED);
-			DSDown_Flag = *(strstr(ptr,"=")+1) - '0';
+			DSDown_Flag = (*(strstr(ptr,"=")+1) - '0') != 0;
 			if (DSDown_Flag)
 			  CheckMenuItem(hMenu, IDM_DSDOWN, MF_CHECKED);
 		}

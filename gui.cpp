@@ -823,7 +823,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_COMMAND:
         {
-            int show_info;
+            bool show_info;
 
             show_info = true;
 			wmId    = LOWORD(wParam);
@@ -3441,19 +3441,19 @@ bool PopFileDlg(PTSTR pstrFileName, HWND hOwner, int Status)
 			crop1088_warned = false;
 			*ofn.lpstrFile = 0;
 			ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
-			return GetOpenFileName(&ofn);
+			return GetOpenFileName(&ofn) != 0;
 
 		case OPEN_AVS:
 		case OPEN_TXT:
 			*ofn.lpstrFile = 0;
 			ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
-			return GetOpenFileName(&ofn);
+			return GetOpenFileName(&ofn) != 0;
 
 		case SAVE_BMP:
 			*ofn.lpstrFile = 0;
             ofn.lpstrInitialDir = BMPPathString;
 			ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER;
-			if (GetSaveFileName(&ofn))
+			if (GetSaveFileName(&ofn) != 0)
 			{
 				ext = strrchr(pstrFileName, '.');
 				if (ext!=NULL && !_strnicmp(ext, ".bmp", 4))

@@ -44,10 +44,6 @@
 #define XTN extern
 #endif
 
-#define		bool	BOOL
-#define		true	TRUE
-#define		false	FALSE
-
 XTN bool bIsWindowsXPorLater;
 
 // Messages to the window procedure.
@@ -202,8 +198,8 @@ typedef struct {
 	int			file;
 	__int64		lba;
 	__int64		position;
-	bool		pf;
-	bool		trf;
+	int			pf;
+	int			trf;
     int         picture_structure;
 }	D2VData;
 XTN D2VData d2v_backward, d2v_forward, d2v_current;

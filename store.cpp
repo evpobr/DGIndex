@@ -46,12 +46,12 @@ void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame)
 {
 	int repeat;
 
-	frame_type = d2v.pf;
-	TFF = d2v.trf>>1;
+	frame_type = d2v.pf != 0;
+	TFF = (d2v.trf>>1) != 0;
 	if (FO_Flag == FO_RAW)
-		RFF = 0;
+		RFF = false;
 	else
-		RFF = d2v.trf & 0x01;
+		RFF = (d2v.trf & 0x01) != 0;
 
 	if (!frame)
 	{
