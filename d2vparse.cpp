@@ -245,7 +245,7 @@ int analyze_sync(HWND hWnd, LPTSTR Input, int audio_id)
 	ext = &szInput[_tcslen(Input)];
 	while (*ext != _T('.')) ext--;
 	ext[1] = 0;
-	_stprintf(tmp, _T("delayT%x.txt"), audio_id);
+	_stprintf_s(tmp, _T("delayT%x.txt"), audio_id);
 	_tcscat(ext, tmp);
 	// Open the output file.
 	wfp = _tfopen(szInput, _T("w"));
