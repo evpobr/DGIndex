@@ -106,9 +106,9 @@ static RECT wrect, crect, info_wrect;
 static int SoundDelay[MAX_FILE_NUMBER];
 static char Outfilename[MAX_FILE_NUMBER][DG_MAX_PATH];
 
-extern int fix_d2v(HWND hWnd, char *path, int test_only);
-extern int parse_d2v(HWND hWnd, char *path);
-extern int analyze_sync(HWND hWnd, char *path, int track);
+extern int fix_d2v(HWND hWnd, LPTSTR path, int test_only);
+extern int parse_d2v(HWND hWnd, LPTSTR path);
+extern int analyze_sync(HWND hWnd, LPTSTR path, int track);
 extern unsigned char *Rdbfr;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
