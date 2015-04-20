@@ -284,7 +284,7 @@ try_again:
 		{
 			mpeg_type = IS_NOT_MPEG;
 			is_program_stream = 0;
-			if (initial_parse(Infilename[0], &mpeg_type, &is_program_stream) == -1)
+			if (initial_parse(Infilename[0], mpeg_type, is_program_stream) == -1)
 			{
 				MessageBox(hWnd, _T("Cannot find video stream!"), NULL, MB_OK | MB_ICONERROR);
 				return 0;
