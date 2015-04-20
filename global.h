@@ -508,7 +508,7 @@ XTN int mpeg_type;
 XTN int is_program_stream;
 
 /* norm.c */
-XTN void Normalize(FILE *WaveIn, int WaveInPos, char *filename, FILE *WaveOut, int WaveOutPos, int size);
+XTN void Normalize(FILE *WaveIn, int WaveInPos, LPCTSTR filename, FILE *WaveOut, int WaveOutPos, int size);
 
 /* store.c */
 XTN void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame);
