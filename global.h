@@ -294,8 +294,8 @@ XTN __int64 PackHeaderPosition;
 
 XTN int LeadingBFrames;
 XTN int ForceOpenGops;
-XTN char AVSTemplatePath[DG_MAX_PATH];
-XTN char BMPPathString[DG_MAX_PATH];
+XTN TCHAR AVSTemplatePath[DG_MAX_PATH];
+XTN TCHAR BMPPathString[DG_MAX_PATH];
 XTN int FullPathInFiles;
 XTN int LoopPlayback;
 XTN int FusionAudio;
@@ -307,8 +307,8 @@ XTN bool Cropping_Flag;
 XTN int Clip_Width, Clip_Height; 
 
 XTN int Method_Flag;
-XTN char Track_List[255];
-XTN char Delay_Track[255];
+XTN TCHAR Track_List[255];
+XTN TCHAR Delay_Track[255];
 XTN int DRC_Flag;
 XTN bool DSDown_Flag;
 XTN bool Decision_Flag;
@@ -339,7 +339,7 @@ XTN int hadRGoption;
 XTN int WindowMode;
 XTN HWND hWnd, hDlg, hTrack;
 XTN HWND hwndSelect;
-XTN char szInput[MAX_FILE_NUMBER*DG_MAX_PATH], szOutput[DG_MAX_PATH], szBuffer[DG_MAX_PATH], szSave[DG_MAX_PATH];
+XTN TCHAR szInput[MAX_FILE_NUMBER*DG_MAX_PATH], szOutput[DG_MAX_PATH], szBuffer[DG_MAX_PATH], szSave[DG_MAX_PATH];
 
 XTN unsigned char *backward_reference_frame[3], *forward_reference_frame[3];
 XTN unsigned char *auxframe[3], *current_frame[3];
@@ -380,7 +380,7 @@ XTN double max_rate;
 XTN int Clip_Left, Clip_Right, Clip_Top, Clip_Bottom;
 
 XTN int Infile[MAX_FILE_NUMBER];
-XTN char *Infilename[MAX_FILE_NUMBER];
+XTN TCHAR *Infilename[MAX_FILE_NUMBER];
 XTN __int64 Infilelength[MAX_FILE_NUMBER];
 XTN __int64	Infiletotal;
 
@@ -473,7 +473,7 @@ XTN int InfoLog_Flag;
 XTN void Recovery(void);
 XTN void RefreshWindow(bool);
 XTN void CheckFlag(void);
-XTN int parse_cli(LPSTR lpCmdLine, LPSTR ucCmdLine);
+XTN int parse_cli(LPTSTR lpCmdLine, LPTSTR ucCmdLine);
 
 /* idct */
 
