@@ -14,8 +14,10 @@
 #include <shellapi.h>
 
 // C RunTime Header Files
+#include <assert.h>
 #include <direct.h>
 #include <io.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <malloc.h>
 #include <memory.h>
