@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <tchar.h>
 #include <time.h>
+#include <locale.h>
 
 
 // TODO: reference additional headers your program requires here

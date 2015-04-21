@@ -436,7 +436,7 @@ XTN int top_field_first;
 XTN int repeat_first_field;
 XTN int intra_vlc_format;
 
-XTN int strverscmp(const char *s1, const char *s2);
+XTN int strverscmp(const TCHAR *s1, const TCHAR *s2);
 
 /* getbit.c */
 XTN void UpdateInfo(void);
@@ -454,9 +454,9 @@ XTN void WriteD2VLine(int);
 /* gui.cpp */
 XTN void UpdateWindowText();
 XTN void UpdateMRUList(void);
-XTN void AddMRUList(char *);
+XTN void AddMRUList(TCHAR *);
 XTN void DeleteMRUList(int);
-XTN char mMRUList[4][DG_MAX_PATH];
+XTN TCHAR mMRUList[4][DG_MAX_PATH];
 #define MISC_KILL 0
 #define END_OF_DATA_KILL 1
 XTN void ThreadKill(int);

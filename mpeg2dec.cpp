@@ -332,7 +332,7 @@ try_again:
 		while (i)
 		{
 			if (FullPathInFiles)
-				fprintf(D2VFile, "%s\n", Infilename[NumLoadedFiles-i]);
+				_ftprintf(D2VFile, _T("%s\n"), Infilename[NumLoadedFiles-i]);
 			else
             {
 				TCHAR path[DG_MAX_PATH];
