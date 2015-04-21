@@ -88,6 +88,116 @@ static void OpenAudioFile(HWND);
 DWORD WINAPI ProcessWAV(LPVOID n);
 void OutputProgress(int);
 
+void MakeAvsFromTemplate(LPCTSTR pszTemplate, LPCTSTR pszOutput)
+{
+	LPTSTR path_p, prog_p;
+	FILE *tplate, *avs;
+
+	if (*AVSTemplatePath && !_tfopen(pszOutput, _T("r")) && (tplate = _tfopen(pszTemplate, _T("r"))))
+	{
+		avs = fopen(avsfile, "w");
+		if (avs)
+		{
+			while (fgets(path, 1023, tplate))
+			{
+				path_p = path;
+				prog_p = prog;
+				while (1)
+				{
+					if (*path_p == 0)
+					{
+						*prog_p = 0;
+						break;
+					}
+					else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'v' &&
+						path_p[3] == 'i' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
+					{
+						// Replace __vid__ macro.
+						*prog_p = 0;
+						if (FullPathInFiles)
+						{
+							strcat(prog_p, D2VFilePath);
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+						}
+						else
+						{
+							char *p;
+							if ((p = strrchr(D2VFilePath, '\\')) != 0) p++;
+							else p = D2VFilePath;
+							strcat(prog_p, p);
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+
+						}
+					}
+					else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'a' &&
+						path_p[3] == 'u' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
+					{
+						// Replace __aud__ macro.
+						*prog_p = 0;
+						if (FullPathInFiles)
+						{
+							strcat(prog_p, AudioFilePath);
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+						}
+						else
+						{
+							char *p;
+							if ((p = strrchr(AudioFilePath, '\\')) != 0) p++;
+							else p = AudioFilePath;
+							strcat(prog_p, p);
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+						}
+					}
+					else if (AudioFilePath && path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'd' &&
+						path_p[3] == 'e' && path_p[4] == 'l' && path_p[5] == '_' && path_p[6] == '_')
+					{
+						// Replace __del__ macro.
+						char *d = &AudioFilePath[strlen(AudioFilePath) - 3];
+						int delay;
+						float fdelay;
+						char fdelay_str[32];
+						while (d > AudioFilePath)
+						{
+							if (d[0] == 'm' && d[1] == 's' && d[2] == '.')
+								break;
+							d--;
+						}
+						if (d > AudioFilePath)
+						{
+							while ((d > AudioFilePath) && d[0] != ' ') d--;
+							if (d[0] == ' ')
+							{
+								sscanf(d, "%d", &delay);
+								fdelay = (float) 0.001 * delay;
+								sprintf(fdelay_str, "%.3f", fdelay);
+								*prog_p = 0;
+								strcat(prog_p, fdelay_str);
+								prog_p = &prog[strlen(prog)];
+								path_p += 7;
+							}
+							else
+								*prog_p++ = *path_p++;
+						}
+						else
+							*prog_p++ = *path_p++;
+					}
+					else
+					{
+						*prog_p++ = *path_p++;
+					}
+				}
+				fputs(prog, avs);
+			}
+			fclose(tplate);
+			fclose(avs);
+		}
+	}
+}
+
 static void StartupEnables(void);
 static void FileLoadedEnables(void);
 static void RunningEnables(void);
@@ -609,10 +719,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	char prog[DG_MAX_PATH];
 	char path[DG_MAX_PATH];
-	char avsfile[DG_MAX_PATH];
-	LPTSTR path_p, prog_p;
-	FILE *tplate, *avs;
-
 	int i, j;
 
 	
@@ -637,113 +743,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case D2V_DONE_MESSAGE:
-			// Make an AVS file if it doesn't already exist and a template exists.
-			strcpy(avsfile, D2VFilePath);
-			path_p = strrchr(avsfile, '.');
-			strcpy(++path_p, "avs");
-			if (*AVSTemplatePath && !fopen(avsfile, "r") && (tplate = fopen(AVSTemplatePath, "r")))
-			{
-				avs = fopen(avsfile, "w");
-				if (avs)
-				{
-					while (fgets(path, 1023, tplate))
-					{
-						path_p = path;
-						prog_p = prog;
-						while (1)
-						{
-							if (*path_p == 0)
-							{
-								*prog_p = 0;
-								break;
-							}
-							else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'v' &&
-								path_p[3] == 'i' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
-							{
-								// Replace __vid__ macro.
-								*prog_p = 0;
-								if (FullPathInFiles)
-								{
-									strcat(prog_p, D2VFilePath);
-									prog_p = &prog[strlen(prog)];
-									path_p += 7;
-								}
-								else
-								{
-									char *p;
-									if ((p = strrchr(D2VFilePath,'\\')) != 0) p++;
-									else p = D2VFilePath;
-									strcat(prog_p, p);
-									prog_p = &prog[strlen(prog)];
-									path_p += 7;
+		{
+			TCHAR avsfile[DG_MAX_PATH];
+			LPTSTR path_p, prog_p;
+			FILE *tplate, *avs;
 
-								}
-							}
-							else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'a' &&
-								path_p[3] == 'u' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
-							{
-								// Replace __aud__ macro.
-								*prog_p = 0;
-								if (FullPathInFiles)
-								{
-									strcat(prog_p, AudioFilePath);
-									prog_p = &prog[strlen(prog)];
-									path_p += 7;
-								}
-								else
-								{
-									char *p;
-									if ((p = strrchr(AudioFilePath,'\\')) != 0) p++;
-									else p = AudioFilePath;
-									strcat(prog_p, p);
-									prog_p = &prog[strlen(prog)];
-									path_p += 7;
-								}
-							}
-							else if (AudioFilePath && path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'd' &&
-								path_p[3] == 'e' && path_p[4] == 'l' && path_p[5] == '_' && path_p[6] == '_')
-							{
-								// Replace __del__ macro.
-								char *d = &AudioFilePath[strlen(AudioFilePath)-3];
-								int delay;
-								float fdelay;
-								char fdelay_str[32];
-								while (d > AudioFilePath)
-								{
-									if (d[0] == 'm' && d[1] == 's' && d[2] == '.')
-										break;
-									d--;
-								}
-								if (d > AudioFilePath)
-								{
-									while ((d > AudioFilePath) && d[0] != ' ') d--;
-									if (d[0] == ' ')
-									{
-										sscanf(d, "%d", &delay);
-										fdelay = (float) 0.001 * delay;
-										sprintf(fdelay_str, "%.3f", fdelay);
-										*prog_p = 0;
-										strcat(prog_p, fdelay_str);
-										prog_p = &prog[strlen(prog)];
-										path_p += 7;
-									}
-									else
-										*prog_p++ = *path_p++;
-								}
-								else
-									*prog_p++ = *path_p++;
-							}
-							else
-							{
-								*prog_p++ = *path_p++;
-							}
-						}
-						fputs(prog, avs);
-					}
-					fclose(tplate);
-					fclose(avs);
-				}
-			}
+			// Make an AVS file if it doesn't already exist and a template exists.
+			_tcscpy_s(avsfile, D2VFilePath);
+			path_p = _tcsrchr(avsfile, _T('.'));
+			_tcscpy(++path_p, _T("avs"));
+
+			MakeAvsFromTemplate(AVSTemplatePath, avsfile);
+
 			if (ExitOnEnd)
 			{
 				if (Info_Flag)
@@ -752,6 +763,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			else CLIActive = 0;
 			break;
+		}
 
 		case PROGRESS_MESSAGE: 
 			OutputProgress(wParam);
