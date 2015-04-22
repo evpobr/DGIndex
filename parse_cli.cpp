@@ -38,6 +38,7 @@ int parse_cli(LPTSTR lpCmdLine, LPTSTR ucCmdLine)
 				*o = 0;
 				if (!_tcsncmp(opt, _T("i"), 3))
 				{
+					
 another:
 					while (*p == _T(' ') || *p == _T('\t')) p++;
 					f = name;

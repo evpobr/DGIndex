@@ -600,13 +600,15 @@ TEST_END:
 		}
 	}
 
-	if (*lpCmdLine)
+	if (lpCmdLine != NULL)
 	{
 		// CLI invocation.
 		if (parse_cli(lpCmdLine, ucCmdLine) != 0)
 			exit(0);
 		if (NumLoadedFiles)
 		{
+			TCHAR szText[1024];
+
 			// Start a LOCATE_INIT thread. When it kills itself, it will start a
 			// LOCATE_RIP thread by sending a WM_USER message to the main window.
 			PlaybackSpeed = SPEED_MAXIMUM;
@@ -730,7 +732,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //			}
 
 			for (i=0; i<MAX_FILE_NUMBER; i++)
-				Infilename[i] = (TCHAR*)malloc(DG_MAX_PATH);
+				Infilename[i] = (TCHAR*)malloc(DG_MAX_PATH * sizeof(TCHAR));
 
 			for (i=0; i<8; i++)
 				block[i] = (short *)_aligned_malloc(sizeof(short)*64, 64);
@@ -2159,7 +2161,7 @@ right_arrow:
 				_aligned_free(block[i]);
 
 			for (i=0; i<MAX_FILE_NUMBER; i++)
-				free(Infilename[i]);
+					free(Infilename[i]);
 
             free(Rdbfr);
 
