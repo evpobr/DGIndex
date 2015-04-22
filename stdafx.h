@@ -26,5 +26,8 @@
 #include <time.h>
 #include <locale.h>
 
+// ATL headers
+#include <atlstr.h>
+
 
 // TODO: reference additional headers your program requires here

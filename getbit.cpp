@@ -458,7 +458,8 @@ void Next_Transport_Packet()
 	transport_packet tp;
 	unsigned int time;
 	double picture_period;
-	TCHAR ext[4], EXT[4];
+	CString strAudioFileName;
+	CString strext, strEXT;
 
 	start = timeGetTime();
 	for (;;)
@@ -792,14 +793,15 @@ emulated3:
 					if (AudioOnly_Flag)
 					{
 						TCHAR *p;
+
 						_tcscpy(szOutput, Infilename[0]);
 						p = &szOutput[_countof(szOutput)];
 						while (*p != _T('.')) p--;
 						*p = 0;
 						if (audio[0].type == FORMAT_AAC)
-							_stprintf_s(szBuffer, _T("%s PID %03x.aac"), szOutput, MPEG2_Transport_AudioPID);
+							strAudioFileName.Format(_T("%s PID %03x.aac"), szOutput, MPEG2_Transport_AudioPID);
 						else
-							_stprintf_s(szBuffer, _T("%s PID %03x %s %s %s %s.%s"), szOutput, MPEG2_Transport_AudioPID,
+							strAudioFileName.Format(_T("%s PID %03x %s %s %s %s.%s"), szOutput, MPEG2_Transport_AudioPID,
 									MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 									MPARate[audio[0].layer][audio[0].rate],
                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -817,9 +819,9 @@ emulated3:
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
 						{
 							if (audio[0].type == FORMAT_AAC)
-								_stprintf_s(szBuffer, _T("%s PID %03x.aac"), szOutput, MPEG2_Transport_AudioPID);
+								strAudioFileName.Format(_T("%s PID %03x.aac"), szOutput, MPEG2_Transport_AudioPID);
 							else
-								_stprintf_s(szBuffer, _T("%s PID %03x %s %s %s %s.%s"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %s %s %s %s.%s"), szOutput, MPEG2_Transport_AudioPID,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate],
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -827,9 +829,9 @@ emulated3:
 						else
 						{
 							if (audio[0].type == FORMAT_AAC)
-								_stprintf_s(szBuffer, _T("%s PID %03x DELAY %dms.aac"), szOutput, MPEG2_Transport_AudioPID, PTSDiff);
+								strAudioFileName.Format(_T("%s PID %03x DELAY %dms.aac"), szOutput, MPEG2_Transport_AudioPID, PTSDiff);
 							else
-								_stprintf_s(szBuffer, _T("%s PID %03x %s %s %s %s DELAY %dms.%s"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %s %s %s %s DELAY %dms.%s"), szOutput, MPEG2_Transport_AudioPID,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate], PTSDiff,
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -839,7 +841,7 @@ emulated3:
 					Rdptr -= 2;
 					if (D2V_Flag || AudioOnly_Flag)
 					{
-						mpafp = OpenAudio(szBuffer, _T("wb"), 0);
+						mpafp = OpenAudio(strAudioFileName, _T("wb"), 0);
 						if (mpafp == NULL)
 						{
 							// Cannot open the output file, Disable further audio processing.
@@ -892,9 +894,9 @@ emulated3:
 			else if (tp.payload_unit_start_indicator)
 			{
 				audio[0].type = FORMAT_LPCM_M2TS;
-				_tcscpy(ext, _T("pcm"));
-				_tcscpy(EXT, _T("pcm"));
-				_tcsupr(EXT);
+				strext = _T("pcm");
+				strEXT = _T("pcm");
+				strEXT.MakeUpper();
 				Get_Short(); // start code
 				Get_Short(); // rest of start code and stream id
 				Get_Short(); // packet length
@@ -927,7 +929,7 @@ emulated3:
 						p = &szOutput[_countof(szOutput)];
 						while (*p != _T('.')) p--;
 						*p = 0;
-						_stprintf_s(szBuffer, _T("%s %s PID %03x.%s"), szOutput, EXT, MPEG2_Transport_AudioPID, ext);
+						strAudioFileName.Format(_T("%s %s PID %03x.%s"), szOutput, strEXT, MPEG2_Transport_AudioPID, strext);
 					}
 					else
 					{
@@ -940,15 +942,15 @@ emulated3:
 						}
 
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-							_stprintf_s(szBuffer, _T("%s %s PID %03x.%s"),
-									szOutput, EXT, MPEG2_Transport_AudioPID, ext);
+							strAudioFileName.Format(_T("%s %s PID %03x.%s"),
+									szOutput, strEXT, MPEG2_Transport_AudioPID, strext);
 						else
-							_stprintf_s(szBuffer, _T("%s %s PID %03x DELAY %dms.%s"),
-									szOutput, EXT, MPEG2_Transport_AudioPID, PTSDiff, ext);
+							strAudioFileName.Format(_T("%s %s PID %03x DELAY %dms.%s"),
+									szOutput, strEXT, MPEG2_Transport_AudioPID, PTSDiff, strext);
 					}
 					if (D2V_Flag || AudioOnly_Flag)
 					{
-						pcmfp = OpenAudio(szBuffer, _T("wb"), 0);
+						pcmfp = OpenAudio(strAudioFileName, _T("wb"), 0);
 						if (pcmfp == NULL)
 						{
 							// Cannot open the output file, Disable further audio processing.
@@ -1104,11 +1106,11 @@ oops2:
 					{
 						InitialAC3();
 
-						_stprintf_s(szBuffer, _T("%s PID %03x %sch %dKbps %s.wav"), szOutput, MPEG2_Transport_AudioPID,
+						strAudioFileName.Format(_T("%s PID %03x %sch %dKbps %s.wav"), szOutput, MPEG2_Transport_AudioPID,
 							AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate], FTType[SRC_Flag]);
 
-						_tcscpy(audio[0].filename, szBuffer);
-						audio[0].file = OpenAudio(szBuffer, _T("wb"), 0);
+						_tcscpy(audio[0].filename, strAudioFileName);
+						audio[0].file = OpenAudio(strAudioFileName, _T("wb"), 0);
 						if (audio[0].file == NULL)
 						{
 							// Cannot open the output file, Disable further audio processing.
@@ -1176,7 +1178,7 @@ oops2:
 							p = &szOutput[_countof(szOutput)];
 							while (*p != _T('.')) p--;
 							*p = 0;
-							_stprintf_s(szBuffer, _T("%s PID %03x %sch %dKbps.ac3"), szOutput, MPEG2_Transport_AudioPID,
+							strAudioFileName.Format(_T("%s PID %03x %sch %dKbps.ac3"), szOutput, MPEG2_Transport_AudioPID,
 								AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate]);
 						}
 						else
@@ -1190,14 +1192,14 @@ oops2:
 							}
 
 							if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-								_stprintf_s(szBuffer, _T("%s PID %03x %sch %dKbps.ac3"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %sch %dKbps.ac3"), szOutput, MPEG2_Transport_AudioPID,
 									AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate]);
 							else
-								_stprintf_s(szBuffer, _T("%s PID %03x %sch %dKbps DELAY %dms.ac3"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %sch %dKbps DELAY %dms.ac3"), szOutput, MPEG2_Transport_AudioPID,
 									AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate], PTSDiff);
 						}
 
-						audio[0].file = OpenAudio(szBuffer, _T("wb"), 0);
+						audio[0].file = OpenAudio(strAudioFileName, _T("wb"), 0);
 						if (audio[0].file == NULL)
 						{
 							// Cannot open the output file, Disable further audio processing.
@@ -1342,7 +1344,7 @@ oops2:
 						p = &szOutput[_countof(szOutput)];
 						while (*p != _T('.')) p--;
 						*p = 0;
-						_stprintf_s(szBuffer, _T("%s PID %03x.dts"), szOutput, MPEG2_Transport_AudioPID);
+						strAudioFileName.Format(_T("%s PID %03x.dts"), szOutput, MPEG2_Transport_AudioPID);
 					}
 					else
 					{
@@ -1355,13 +1357,13 @@ oops2:
 						}
 
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-							_stprintf_s(szBuffer, _T("%s PID %03x.dts"), szOutput, MPEG2_Transport_AudioPID);
+							strAudioFileName.Format(_T("%s PID %03x.dts"), szOutput, MPEG2_Transport_AudioPID);
 						else
-							_stprintf_s(szBuffer, _T("%s PID %03x DELAY %dms.dts"), szOutput, MPEG2_Transport_AudioPID, PTSDiff);
+							strAudioFileName.Format(_T("%s PID %03x DELAY %dms.dts"), szOutput, MPEG2_Transport_AudioPID, PTSDiff);
 					}
 					if (D2V_Flag || AudioOnly_Flag)
 					{
-						audio[0].file = OpenAudio(szBuffer, _T("wb"), 0);
+						audio[0].file = OpenAudio(strAudioFileName, _T("wb"), 0);
 						if (audio[0].file == NULL)
 						{
 							// Cannot open the output file, Disable further audio processing.
@@ -1402,6 +1404,7 @@ void Next_PVA_Packet()
 	unsigned int code, PTS, PES_PTS, Packet_Header_Length;
 	int PTSDiff;
 	double picture_period;
+	CString strAudioFileName;
 
 	start = timeGetTime();
 	for (;;)
@@ -1591,9 +1594,9 @@ emulated0:
 						while (*p != _T('.')) p--;
 						*p = 0;
 						if (audio[0].type == FORMAT_AAC)
-							_stprintf_s(szBuffer, _T("%s.aac"), szOutput);
+							strAudioFileName.Format(_T("%s.aac"), szOutput);
 						else
-							_stprintf_s(szBuffer, _T("%s %s %s %s %s.%s"), szOutput,
+							strAudioFileName.Format(_T("%s %s %s %s %s.%s"), szOutput,
 									MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 									MPARate[audio[0].layer][audio[0].rate],
                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -1610,9 +1613,9 @@ emulated0:
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
 						{
 							if (audio[0].type == FORMAT_AAC)
-								_stprintf_s(szBuffer, _T("%s.aac"), szOutput);
+								strAudioFileName.Format(_T("%s.aac"), szOutput);
 							else
-								_stprintf_s(szBuffer, _T("%s %s %s %s %s.%s"), szOutput,
+								strAudioFileName.Format(_T("%s %s %s %s %s.%s"), szOutput,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate],
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -1620,9 +1623,9 @@ emulated0:
 						else
 						{
 							if (audio[0].type == FORMAT_AAC)
-								_stprintf_s(szBuffer, _T("%s DELAY %dms.aac"), szOutput, PTSDiff);
+								strAudioFileName.Format(_T("%s DELAY %dms.aac"), szOutput, PTSDiff);
 							else
-								_stprintf_s(szBuffer, _T("%s %s %s %s %s DELAY %dms.%s"), szOutput,
+								strAudioFileName.Format(_T("%s %s %s %s %s DELAY %dms.%s"), szOutput,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate], PTSDiff,
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -1634,7 +1637,7 @@ emulated0:
 					Rdptr -= 2;
 					if (D2V_Flag || AudioOnly_Flag)
 					{
-						mpafp = OpenAudio(szBuffer, _T("wb"), 0);
+						mpafp = OpenAudio(strAudioFileName, _T("wb"), 0);
 						if (mpafp == NULL)
 						{
 							// Cannot open the output file.
@@ -1666,6 +1669,7 @@ void Next_Packet()
 	__int64 tmp;
 	__int64 SCRbase, SCRext, SCR;
 	char buf[64];
+	CString strAudioFileName, strText;
 
 	if (SystemStream_Flag == TRANSPORT_STREAM)
 	{
@@ -1771,11 +1775,11 @@ void Next_Packet()
 					CELL_ID = Get_Byte();
 					Rdptr += Packet_Length - 29;
 
-					_stprintf_s(szBuffer, _T("%d"), VOB_ID);
-					SetDlgItemText(hDlg, IDC_VOB_ID, szBuffer);
+					strText.Format(_T("%d"), VOB_ID);
+					SetDlgItemText(hDlg, IDC_VOB_ID, strText);
 
-					_stprintf_s(szBuffer, _T("%d"), CELL_ID);
-					SetDlgItemText(hDlg, IDC_CELL_ID, szBuffer);
+					strText.Format(_T("%d"), CELL_ID);
+					SetDlgItemText(hDlg, IDC_CELL_ID, strText);
 				}
 				else
 					Rdptr += Packet_Length;
@@ -1874,11 +1878,11 @@ oops:
 							{
 								InitialAC3();
 
-								_stprintf_s(szBuffer, _T("%s T%x %sch %dKbps %s.wav"), szOutput, AUDIO_ID,
+								strAudioFileName.Format(_T("%s T%x %sch %dKbps %s.wav"), szOutput, AUDIO_ID,
 									AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate], FTType[SRC_Flag]);
 
-								_tcscpy(audio[AUDIO_ID].filename, szBuffer);
-								audio[AUDIO_ID].file = OpenAudio(szBuffer, _T("wb"), AUDIO_ID);
+								_tcscpy(audio[AUDIO_ID].filename, strAudioFileName);
+								audio[AUDIO_ID].file = OpenAudio(strAudioFileName, _T("wb"), AUDIO_ID);
 								if (audio[AUDIO_ID].file == NULL)
 								{
 									MessageBox(hWnd, _T("Cannot open file for audio demux output.\nAborting..."), NULL, MB_OK | MB_ICONERROR);
@@ -1944,7 +1948,8 @@ oops:
 									p = &szOutput[_countof(szOutput)];
 									while (*p != _T('.')) p--;
 									*p = 0;
-									_stprintf_s(szBuffer, _T("%s T%x %sch %dKbps.ac3"), szOutput, AUDIO_ID,
+
+									strAudioFileName.Format(_T("%s T%x %sch %dKbps.ac3"), szOutput, AUDIO_ID,
 										AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate]);
 								}
 								else
@@ -1958,16 +1963,16 @@ oops:
 									}
 
 									if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-										_stprintf_s(szBuffer, _T("%s T%x %sch %dKbps.ac3"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %sch %dKbps.ac3"), szOutput, AUDIO_ID,
 											AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate]);
 									else
-										_stprintf_s(szBuffer, _T("%s T%x %sch %dKbps DELAY %dms.ac3"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %sch %dKbps DELAY %dms.ac3"), szOutput, AUDIO_ID,
 											AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate], PTSDiff);
 
 	//								dprintf("DGIndex: Using Video PTS = %d, Audio PTS = %d [%d], reference = %d, rate = %f\n",
 	//										VideoPTS/90, AudioPTS/90, PTSDiff, StartTemporalReference, frame_rate);
 								}
-								audio[AUDIO_ID].file = OpenAudio(szBuffer, _T("wb"), AUDIO_ID);
+								audio[AUDIO_ID].file = OpenAudio(strAudioFileName, _T("wb"), AUDIO_ID);
 								if (audio[AUDIO_ID].file == NULL)
 								{
 									MessageBox(hWnd, _T("Cannot open file for audio demux output.\nAborting..."), NULL, MB_OK | MB_ICONERROR);
@@ -2033,13 +2038,13 @@ oops:
 									p = &szOutput[_countof(szOutput)];
 									while (*p != _T('.')) p--;
 									*p = 0;
-									_stprintf_s(szBuffer, _T("%s T%x %s %s %dch.wav"),
+									strAudioFileName.Format(_T("%s T%x %s %s %dch.wav"),
 										szOutput,
 										AUDIO_ID,
 										(audio[AUDIO_ID].format & 0x30) == 0 ? _T("48K") : _T("96K"),
 										(audio[AUDIO_ID].format & 0xc0) == 0 ? _T("16bit") : ((audio[AUDIO_ID].format & 0xc0) == 0x40 ? _T("20bit") : _T("24bit")),
 										(audio[AUDIO_ID].format & 0x07) + 1);
-									_tcscpy(audio[AUDIO_ID].filename, szBuffer);
+									_tcscpy(audio[AUDIO_ID].filename, strAudioFileName);
 								}
 								else
 								{
@@ -2057,16 +2062,16 @@ oops:
 										audio[AUDIO_ID].delay = PTSDiff * 192;
 
 
-									_stprintf_s(szBuffer, _T("%s T%x %s %s %dch.wav"),
+									strAudioFileName.Format(_T("%s T%x %s %s %dch.wav"),
 										szOutput,
 										AUDIO_ID,
 										(audio[AUDIO_ID].format & 0x30) == 0 ? _T("48K") : _T("96K"),
 										(audio[AUDIO_ID].format & 0xc0) == 0 ? _T("16bit") : ((audio[AUDIO_ID].format & 0xc0) == 0x40 ? _T("20bit") : _T("24bit")),
 										(audio[AUDIO_ID].format & 0x07) + 1);
-									_tcscpy(audio[AUDIO_ID].filename, szBuffer);
+									_tcscpy(audio[AUDIO_ID].filename, strAudioFileName);
 								}
 
-								audio[AUDIO_ID].file = OpenAudio(szBuffer, _T("wb"), AUDIO_ID);
+								audio[AUDIO_ID].file = OpenAudio(strAudioFileName, _T("wb"), AUDIO_ID);
 								if (audio[AUDIO_ID].file == NULL)
 								{
 									MessageBox(hWnd, _T("Cannot open file for audio demux output.\nAborting..."), NULL, MB_OK | MB_ICONERROR);
@@ -2138,7 +2143,7 @@ oops:
 									p = &szOutput[_countof(szOutput)];
 									while (*p != _T('.')) p--;
 									*p = 0;
-									_stprintf_s(szBuffer, _T("%s T%x.dts"), szOutput, AUDIO_ID);
+									strAudioFileName.Format(_T("%s T%x.dts"), szOutput, AUDIO_ID);
 								}
 								else
 								{
@@ -2151,12 +2156,12 @@ oops:
 									}
 
 									if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-										_stprintf_s(szBuffer, _T("%s T%x.dts"), szOutput, AUDIO_ID);
+										strAudioFileName.Format(_T("%s T%x.dts"), szOutput, AUDIO_ID);
 									else
-										_stprintf_s(szBuffer, _T("%s T%x DELAY %dms.dts"), szOutput, AUDIO_ID, PTSDiff);
+										strAudioFileName.Format(_T("%s T%x DELAY %dms.dts"), szOutput, AUDIO_ID, PTSDiff);
 								}
 
-								audio[AUDIO_ID].file = OpenAudio(szBuffer, _T("wb"), AUDIO_ID);
+								audio[AUDIO_ID].file = OpenAudio(strAudioFileName, _T("wb"), AUDIO_ID);
 								if (audio[AUDIO_ID].file == NULL)
 								{
 									MessageBox(hWnd, _T("Cannot open file for audio demux output.\nAborting..."), NULL, MB_OK | MB_ICONERROR);
@@ -2274,7 +2279,7 @@ emulated1:
 									p = &szOutput[_countof(szOutput)];
 									while (*p != _T('.')) p--;
 									*p = 0;
-									_stprintf_s(szBuffer, _T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+									strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
 											MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 											MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                             UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
@@ -2290,17 +2295,17 @@ emulated1:
 									}
 
 									if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-										_stprintf_s(szBuffer, _T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
 												MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                                 UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
  									else
-										_stprintf_s(szBuffer, _T("%s T%x %s %s %s %s DELAY %dms.%s"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %s %s %s %s DELAY %dms.%s"), szOutput, AUDIO_ID,
 												MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate], PTSDiff,
                                                 UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
 								}								
-								audio[AUDIO_ID].file = OpenAudio(szBuffer, _T("wb"), AUDIO_ID);
+								audio[AUDIO_ID].file = OpenAudio(strAudioFileName, _T("wb"), AUDIO_ID);
 								if (audio[AUDIO_ID].file == NULL)
 								{
 									MessageBox(hWnd, _T("Cannot open file for audio demux output.\nAborting..."), NULL, MB_OK | MB_ICONERROR);
@@ -2394,7 +2399,7 @@ emulated2:
 										p = &szOutput[_countof(szOutput)];
 										while (*p != _T('.')) p--;
 										*p = 0;
-										_stprintf_s(szBuffer, _T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
 												MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                                 UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
@@ -2410,17 +2415,17 @@ emulated2:
 										}
 
 										if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-											_stprintf_s(szBuffer, _T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+											strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
 													MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 													MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
 										else
-											_stprintf_s(szBuffer, _T("%s T%x %s %s %s %s DELAY %dms.%s"), szOutput, AUDIO_ID,
+											strAudioFileName.Format(_T("%s T%x %s %s %s %s DELAY %dms.%s"), szOutput, AUDIO_ID,
 												    MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												    MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate], PTSDiff,
                                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
 									}
-									audio[AUDIO_ID].file = OpenAudio(szBuffer, _T("wb"), AUDIO_ID);
+									audio[AUDIO_ID].file = OpenAudio(strAudioFileName, _T("wb"), AUDIO_ID);
 									if (audio[AUDIO_ID].file == NULL)
 									{
 										MessageBox(hWnd, _T("Cannot open file for audio demux output.\nAborting..."), NULL, MB_OK | MB_ICONERROR);
@@ -2661,53 +2666,54 @@ void UpdateInfo()
 	extern int Clip_Width, Clip_Height, profile_and_level_indication;
 	int i;
     double video_percent, film_percent;
+	CString strText;
 
 	if (!AudioOnly_Flag)
 	{
 		switch (SystemStream_Flag)
 		{
 		case ELEMENTARY_STREAM:
-			_stprintf_s(szBuffer, _T("Elementary"));
+			strText = _T("Elementary");
 			break;
 		case PROGRAM_STREAM:
 			if (program_stream_type == MPEG1_PROGRAM_STREAM)
-				_stprintf_s(szBuffer, _T("MPEG1 Program"));
+				strText = _T("MPEG1 Program");
 			else
-				_stprintf_s(szBuffer, _T("MPEG2 Program"));
+				strText = _T("MPEG2 Program");
 			break;
 		case TRANSPORT_STREAM:
-			_stprintf_s(szBuffer, _T("Transport [%d]"), TransportPacketSize);
+			strText.Format(_T("Transport [%d]"), TransportPacketSize);
 			break;
 		case PVA_STREAM:
-			_stprintf_s(szBuffer, _T("PVA"));
+			strText = _T("PVA");
 			break;
 		}
-		SetDlgItemText(hDlg, IDC_STREAM_TYPE, szBuffer);
+		SetDlgItemText(hDlg, IDC_STREAM_TYPE, strText);
 
 		if (mpeg_type == IS_MPEG2)
         {
 			//TODO: may be bug in unicode version
             if (aspect_ratio_information < sizeof(AspectRatio) / sizeof(char *))
-				_stprintf_s(szBuffer, _T("%s [%d]"), AspectRatio[aspect_ratio_information], aspect_ratio_information);
+				strText.Format(_T("%s [%d]"), AspectRatio[aspect_ratio_information], aspect_ratio_information);
             else
-				_stprintf_s(szBuffer, _T("Reserved"));
+				strText = _T("Reserved");
         }
 		else
-			_stprintf_s(szBuffer, _T("%s"), AspectRatioMPEG1[aspect_ratio_information]);
-		SetDlgItemText(hDlg, IDC_ASPECT_RATIO, szBuffer);
+			strText = AspectRatioMPEG1[aspect_ratio_information];
+			SetDlgItemText(hDlg, IDC_ASPECT_RATIO, strText);
 
-		_stprintf_s(szBuffer, _T("%dx%d"), Clip_Width, Clip_Height);
-		SetDlgItemText(hDlg, IDC_FRAME_SIZE, szBuffer);
+			strText.Format(_T("%dx%d"), Clip_Width, Clip_Height);
+			SetDlgItemText(hDlg, IDC_FRAME_SIZE, strText);
 
         if (display_horizontal_size == 0)
         {
-			_stprintf_s(szBuffer, _T("[not specified]"));
+			strText = _T("[not specified]");
         }
         else
         {
-			_stprintf_s(szBuffer, _T("%dx%d"), display_horizontal_size, display_vertical_size);
+			strText.Format(_T("%dx%d"), display_horizontal_size, display_vertical_size);
         }
-		SetDlgItemText(hDlg, IDC_DISPLAY_SIZE, szBuffer);
+		SetDlgItemText(hDlg, IDC_DISPLAY_SIZE, strText);
 
 		if (mpeg_type == IS_MPEG2)
 		{
@@ -2716,50 +2722,50 @@ void UpdateInfo()
 			switch (profile)
 			{
 			case 1: // high
-				_tcscpy_s(szBuffer, _T("high@"));
+				strText = _T("high@");
 				break;
 			case 2: // spatial
-				_tcscpy_s(szBuffer, _T("spatial@"));
+				strText = _T("spatial@");
 				break;
 			case 3: // SNR
-				_tcscpy_s(szBuffer, _T("snr@"));
+				strText = _T("snr@");
 				break;
 			case 4: // main
-				_tcscpy_s(szBuffer, _T("main@"));
+				strText = _T("main@");
 				break;
 			case 5: // simple
-				_tcscpy_s(szBuffer, _T("simple@"));
+				strText = _T("simple@");
 				break;
 			default:
-				_stprintf_s(szBuffer, _T("esc (%d@%d)"), profile, level);
+				strText.Format(_T("esc (%d@%d)"), profile, level);
 				break;
 			}
 			switch (level)
 			{
 			case 4:
-				_tcscat_s(szBuffer, _T("high"));
+				strText += _T("high");
 				break;
 			case 6:
-				_tcscat_s(szBuffer, _T("high1440"));
+				strText += _T("high1440");
 				break;
 			case 8:
-				_tcscat_s(szBuffer, _T("main"));
+				strText += _T("main");
 				break;
 			case 10:
-				_tcscat_s(szBuffer, _T("low"));
+				strText += _T("low");
 				break;
 			default:
 				break;
 			}
-			SetDlgItemText(hDlg, IDC_PROFILE, szBuffer);
+			SetDlgItemText(hDlg, IDC_PROFILE, strText);
 		}
 		else
 		{
 			SetDlgItemText(hDlg, IDC_PROFILE, _T("[MPEG1]"));
 		}
 
-		_stprintf_s(szBuffer, _T("%.6f fps"), Frame_Rate);
-		SetDlgItemText(hDlg, IDC_FRAME_RATE, szBuffer);
+		strText.Format(_T("%.6f fps"), Frame_Rate);
+		SetDlgItemText(hDlg, IDC_FRAME_RATE, strText);
 	}
 
 	while (SendDlgItemMessage(hDlg, IDC_AUDIO_LIST, LB_DELETESTRING, 0, 0) != LB_ERR);
@@ -2770,21 +2776,21 @@ void UpdateInfo()
 		    switch (audio[i].type)
 		    {
 			    case FORMAT_AC3:
-					_stprintf_s(szBuffer, _T("%x: AC3 %s %d"), i, AC3Mode[audio[i].mode], AC3Rate[audio[i].rate]);
+					strText.Format(_T("%x: AC3 %s %d"), i, AC3Mode[audio[i].mode], AC3Rate[audio[i].rate]);
 				    break;
 
 			    case FORMAT_MPA:
-					_stprintf_s(szBuffer, _T("%x: MPA %s %s %s %s"), i,
+					strText.Format(_T("%x: MPA %s %s %s %s"), i,
 							MPALayer[audio[i].layer], MPAMode[audio[i].mode], MPASample[audio[i].sample],
 							MPARate[audio[i].layer][audio[i].rate]);
 				    break;
 
 			    case FORMAT_AAC:
-					_stprintf_s(szBuffer, _T("%x: AAC Audio"), i);
+					strText.Format(_T("%x: AAC Audio"), i);
 				    break;
 
                 case FORMAT_LPCM:
-					_stprintf_s(szBuffer, _T("%x: PCM %s %s %dch"), i,
+					strText.Format(_T("%x: PCM %s %s %dch"), i,
 						(audio[i].format & 0x30) == 0 ? _T("48K") : _T("96K"),
 						(audio[i].format & 0xc0) == 0 ? _T("16bit") : ((audio[i].format & 0xc0) == 0x40 ? _T("20bit") : _T("24bit")),
 					    (audio[i].format & 0x07) + 1);
@@ -2792,88 +2798,88 @@ void UpdateInfo()
 
 			    case FORMAT_LPCM_M2TS:
 			    {
-				    TCHAR sample_rate[16];
-				    TCHAR bits_per_sample[16];
-				    TCHAR num_channels[16];
+				    CString strSampleRate;
+				    CString strBitsPerSample;
+				    CString strNumChannels;
 				    switch ((audio[i].format_m2ts & 0xf00) >> 8)
 				    {
 					    case 1:
-							_stprintf_s(sample_rate, _T("48K"));
+							strSampleRate = _T("48K");
 						    break;
 					    case 4:
-							_stprintf_s(sample_rate, _T("96K"));
+							strSampleRate = _T("96K");
 						    break;
 					    case 5:
-							_stprintf_s(sample_rate, _T("192K"));
+							strSampleRate = _T("192K");
 						    break;
 					    default:
-							_stprintf_s(sample_rate, _T("RES"));
+							strSampleRate = _T("RES");
 						    break;
 				    }
 				    switch ((audio[i].format_m2ts & 0xc0) >> 6)
 				    {
 					    case 1:
-							_stprintf_s(bits_per_sample, _T("16bit"));
+							strBitsPerSample = _T("16bit");
 						    break;
 					    case 2:
-							_stprintf_s(bits_per_sample, _T("20bit"));
+							strBitsPerSample = _T("20bit");
 						    break;
 					    case 3:
-							_stprintf_s(bits_per_sample, _T("24bit"));
+							strBitsPerSample = _T("24bit");
 						    break;
 					    default:
-							_stprintf_s(bits_per_sample, _T("RES"));
+							strBitsPerSample = _T("RES");
 						    break;
 				    }
 				    switch ((audio[i].format_m2ts & 0xf000) >> 12)
 				    {
 					    case 1:
-							_stprintf_s(num_channels, _T("1/0"));
+							strNumChannels = _T("1/0");
 						    break;
 					    case 3:
-							_stprintf_s(num_channels, _T("2/0"));
+							strNumChannels = _T("2/0");
 						    break;
 					    case 4:
-							_stprintf_s(num_channels, _T("3/0"));
+							strNumChannels = _T("3/0");
 						    break;
 					    case 5:
-							_stprintf_s(num_channels, _T("2/1"));
+							strNumChannels = _T("2/1");
 						    break;
 					    case 6:
-							_stprintf_s(num_channels, _T("3/1"));
+							strNumChannels = _T("3/1");
 						    break;
 					    case 7:
-							_stprintf_s(num_channels, _T("2/2"));
+							strNumChannels = _T("2/2");
 						    break;
 					    case 8:
-							_stprintf_s(num_channels, _T("3/2"));
+							strNumChannels = _T("3/2");
 						    break;
 					    case 9:
-							_stprintf_s(num_channels, _T("3/2lfe"));
+							strNumChannels = _T("3/2lfe");
 						    break;
 					    case 10:
-							_stprintf_s(num_channels, _T("3/4"));
+							strNumChannels =  _T("3/4");
 						    break;
 					    case 11:
-							_stprintf_s(num_channels, _T("3/4lfe"));
+							strNumChannels = _T("3/4lfe");
 						    break;
 					    default:
 							_tprintf(_T("LPCM Audio Mode = reserved\n"));
 						    break;
 				    }
-					_stprintf_s(szBuffer, _T("%x: PCM %s %s %s"), i, sample_rate, bits_per_sample, num_channels);
+					strText.Format(_T("%x: PCM %s %s %s"), i, strSampleRate, strBitsPerSample, strNumChannels);
 				    break;
 			    }
 
 			    case FORMAT_DTS:
-					_stprintf_s(szBuffer, _T("%x: DTS Audio"), i);
+					strText.Format(_T("%x: DTS Audio"), i);
 				    break;
 
 			    default:
-					_stprintf_s(szBuffer, _T(""));
+					strText = _T("");
 				    break;
 		    }
-            SendDlgItemMessage(hDlg, IDC_AUDIO_LIST, LB_ADDSTRING, 0, (LPARAM)szBuffer);
+			SendDlgItemMessage(hDlg, IDC_AUDIO_LIST, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)strText);
 		    if (SystemStream_Flag == TRANSPORT_STREAM)
 			    break;
         }
@@ -2884,13 +2890,14 @@ void UpdateInfo()
 		unsigned int hours, mins, secs;
 		__int64 processed;
 		int i, trackpos;
+		CString strText;
 
 		pts = AudioPTS/90000;
 		hours = pts / 3600;
 		mins = (pts % 3600) / 60;
 		secs = pts % 60;
-		_stprintf_s(szBuffer, _T("%d:%02d:%02d"), hours, mins, secs);
-		SetDlgItemText(hDlg, IDC_TIMESTAMP, szBuffer);
+		strText.Format(_T("%d:%02d:%02d"), hours, mins, secs);
+		SetDlgItemText(hDlg, IDC_TIMESTAMP, strText);
 		for (i = 0, processed = 0; i < CurrentFile; i++)
 		{
 			processed += Infilelength[i];
@@ -2912,31 +2919,31 @@ void UpdateInfo()
 			if (!FILM_Purity)
 			{
 				if (frame_rate==25 || frame_rate==50)
-					_stprintf_s(szBuffer, _T("PAL"));
+					strText = _T("PAL");
 				else
-					_stprintf_s(szBuffer, _T("NTSC"));
+					strText = _T("NTSC");
 			}
 			else if (!VIDEO_Purity)
-				_stprintf_s(szBuffer, _T("Film"));
+				strText = _T("Film");
 			else if (VIDEO_Purity > Old_VIDEO_Purity)
 			{
 				video_percent = 100.0 - (FILM_Purity*100.0)/(FILM_Purity+VIDEO_Purity);
 				if (video_percent > 50)
-					_stprintf_s(szBuffer, _T("Video %.2f%%"), video_percent);
+					strText.Format(_T("Video %.2f%%"), video_percent);
 				else
-					_stprintf_s(szBuffer, _T("Film %.2f%%"), 100.0 - video_percent);
+					strText.Format(_T("Film %.2f%%"), 100.0 - video_percent);
 			}
 			else
 			{
 				film_percent = (FILM_Purity*100.0)/(FILM_Purity+VIDEO_Purity);
 				if (film_percent > 50)
-					_stprintf_s(szBuffer, _T("Film %.2f%%"), film_percent);
+					strText.Format(_T("Film %.2f%%"), film_percent);
 				else
-					_stprintf_s(szBuffer, _T("Video %.2f%%"), 100.0 - film_percent);
+					strText.Format(_T("Video %.2f%%"), 100.0 - film_percent);
 			}
 
 			Old_VIDEO_Purity = VIDEO_Purity;
-			SetDlgItemText(hDlg, IDC_VIDEO_TYPE, szBuffer);
+			SetDlgItemText(hDlg, IDC_VIDEO_TYPE, strText);
 		}
 	}
 	else

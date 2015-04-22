@@ -164,8 +164,10 @@ error:
 
 				if (Decision_Flag && Sound_Max > Norm_Ratio)
 				{
-					_stprintf_s(szBuffer, _T("%.2f"), 327.68 * Norm_Ratio / Sound_Max);
-					SetDlgItemText(hDlg, IDC_INFO, szBuffer);
+					CString strBuffer;
+
+					strBuffer.Format(_T("%.2f"), 327.68 * Norm_Ratio / Sound_Max);
+					SetDlgItemText(hDlg, IDC_INFO, strBuffer);
 				}
 			}
 
