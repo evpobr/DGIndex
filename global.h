@@ -381,7 +381,7 @@ XTN double max_rate;
 XTN int Clip_Left, Clip_Right, Clip_Top, Clip_Bottom;
 
 XTN int Infile[MAX_FILE_NUMBER];
-XTN TCHAR *Infilename[MAX_FILE_NUMBER];
+XTN CString Infilename[MAX_FILE_NUMBER];
 XTN __int64 Infilelength[MAX_FILE_NUMBER];
 XTN __int64	Infiletotal;
 
@@ -455,9 +455,9 @@ XTN void WriteD2VLine(int);
 /* gui.cpp */
 XTN void UpdateWindowText();
 XTN void UpdateMRUList(void);
-XTN void AddMRUList(TCHAR *);
+XTN void AddMRUList(LPCTSTR);
 XTN void DeleteMRUList(int);
-XTN TCHAR mMRUList[4][DG_MAX_PATH];
+XTN CString mMRUList[4];
 #define MISC_KILL 0
 #define END_OF_DATA_KILL 1
 XTN void ThreadKill(int);

@@ -325,7 +325,7 @@ TEST_END:
 		#define MAX_CMD 2048
 		int tmp, n, i, j, k;
 		int state, ndx;
-		LPTSTR swp;
+		CString swp;
 
 //		MessageBox(hWnd, lpCmdLine, NULL, MB_OK);
 		ptr = lpCmdLine;
@@ -374,7 +374,7 @@ TEST_END:
 						if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 						{
 //							MessageBox(hWnd, "Open OK", NULL, MB_OK);
-							_tcscpy(Infilename[NumLoadedFiles], cwd);
+							Infilename[NumLoadedFiles] = cwd;
 							Infile[NumLoadedFiles] = tmp;
 							NumLoadedFiles++;
 						}
@@ -393,7 +393,7 @@ TEST_END:
 						if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 						{
 //							MessageBox(hWnd, "Open OK", NULL, MB_OK);
-							_tcscpy(Infilename[NumLoadedFiles], cwd);
+							Infilename[NumLoadedFiles] = cwd;
 							Infile[NumLoadedFiles] = tmp;
 							NumLoadedFiles++;
 						}
@@ -405,7 +405,7 @@ TEST_END:
 						if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 						{
 //							MessageBox(hWnd, "Open OK", NULL, MB_OK);
-							_tcscpy(Infilename[NumLoadedFiles], cwd);
+							Infilename[NumLoadedFiles] = cwd;
 							Infile[NumLoadedFiles] = tmp;
 							NumLoadedFiles++;
 						}
@@ -505,8 +505,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	HDC hdc;
 	PAINTSTRUCT ps;
-	TCHAR prog[DG_MAX_PATH];
-	TCHAR path[DG_MAX_PATH];
+	CString prog;
+	CString path;
 	int i, j;
 
 	
@@ -576,8 +576,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			hProcess = GetCurrentProcess();
 
 			// Load the splash screen from the file dgindex.bmp if it exists.
-			_tcscpy(prog, ExePath);
-			_tcscat(prog, _T("dgindex.bmp"));
+			prog = ExePath;
+			prog += _T("dgindex.bmp");
 			splash = (HBITMAP) ::LoadImage (0, prog, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 //			if (splash == 0)
 //			{
@@ -617,7 +617,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         NumLoadedFiles = 0;
                         if ((tmp = _topen(mMRUList[wmId - ID_MRU_FILE0], _O_RDONLY | _O_BINARY)) != -1)
 						{
-                            _tcscpy(Infilename[NumLoadedFiles], mMRUList[wmId - ID_MRU_FILE0]);
+                            Infilename[NumLoadedFiles] = mMRUList[wmId - ID_MRU_FILE0];
 					        Infile[NumLoadedFiles] = tmp;
                             NumLoadedFiles = 1;
  			                Recovery();
@@ -877,9 +877,11 @@ D2V_PROCESS:
 						while (i)
 						{
 
-							_fgetts(Infilename[NumLoadedFiles-i], DG_MAX_PATH - 1, D2VFile);
+							_fgetts(Infilename[NumLoadedFiles - i].GetBuffer(DG_MAX_PATH - 1), DG_MAX_PATH - 1, D2VFile);
+							Infilename[NumLoadedFiles - i].ReleaseBuffer();
 							// Strip newline.
-							Infilename[NumLoadedFiles-i][_tcslen(Infilename[NumLoadedFiles-i])-1] = 0;
+							//Infilename[NumLoadedFiles-i][_tcslen(Infilename[NumLoadedFiles-i])-1] = 0;
+							Infilename[NumLoadedFiles - i].Truncate(Infilename[NumLoadedFiles - i].GetLength() -1);
 							if ((Infile[NumLoadedFiles-i] = _topen(Infilename[NumLoadedFiles-i], _O_RDONLY | _O_BINARY | _O_SEQUENTIAL))==-1)
 							{
 								while (i<NumLoadedFiles)
@@ -1604,13 +1606,13 @@ D2V_PROCESS:
 				case IDM_DGINDEX_MANUAL:
 				case IDM_DGDECODE_MANUAL:
 				{
-					_tcscpy(prog, ExePath);
+					prog = ExePath;
 					if (wmId == IDM_QUICK_START)
-						_tcscat(prog, _T("QuickStart.html"));
+						prog += _T("QuickStart.html");
 					else if (wmId == IDM_DGINDEX_MANUAL)
-						_tcscat(prog, _T("DGIndexManual.html"));
+						prog += _T("DGIndexManual.html");
 					else
-						_tcscat(prog, _T("DGDecodeManual.html"));
+						prog += _T("DGDecodeManual.html");
 					ShellExecute(NULL, _T("open"), prog, NULL, NULL, SW_SHOWNORMAL);
 					break;
 				}
@@ -1891,7 +1893,9 @@ right_arrow:
 			}
 
 		case WM_DROPFILES:
-			TCHAR *ext, *tmp;
+		{
+			CString ext;
+			CString tmp;
 			int drop_count, drop_index;
 			int n;
 
@@ -1906,16 +1910,16 @@ right_arrow:
 
 			// Set the output directory for a Save D2V operation to the
 			// same path as these input files.
-			_tcscpy(path, szInput);
-			tmp = path + _tcslen(path);
-			while (*tmp != _T('\\') && tmp >= path) tmp--;
-			tmp[1] = 0;
+			path = szInput;
+			RemoveFileSpec(path);
+			AddBackslash(path);
 			strSave = path;
 
 			ext = _tcsrchr(szInput, _T('.'));
-			if (ext!=NULL)
+			ext = FindExtension(szInput);
+			if (!ext.IsEmpty())
 			{
-				if (!_tcsnicmp(ext, _T(".d2v"), 4))
+				if (!ext.CompareNoCase(_T(".d2v")))
 				{
 					DragFinish((HDROP)wParam);
 					goto D2V_PROCESS;
@@ -1926,7 +1930,7 @@ right_arrow:
 			{
 				NumLoadedFiles--;
 				_close(Infile[NumLoadedFiles]);
-                Infile[NumLoadedFiles] = NULL;
+				Infile[NumLoadedFiles] = NULL;
 			}
 
 			drop_count = DragQueryFile((HDROP)wParam, 0xffffffff, szInput, _countof(szInput));
@@ -1936,7 +1940,7 @@ right_arrow:
 				struct _tfinddata_t seqfile;
 				if (_tfindfirst(szInput, &seqfile) != -1L)
 				{
-					_tcscpy(Infilename[NumLoadedFiles], szInput);
+					Infilename[NumLoadedFiles] = szInput;
 					NumLoadedFiles++;
 					SystemStream_Flag = ELEMENTARY_STREAM;
 				}
@@ -1951,11 +1955,11 @@ right_arrow:
 			{
 				for (j = 0; j < n - 1 - i; j++)
 				{
-					if (strverscmp(Infilename[j+1], Infilename[j]) < 0)
+					if (strverscmp(Infilename[j + 1], Infilename[j]) < 0)
 					{
 						tmp = Infilename[j];
-						Infilename[j] = Infilename[j+1];
-						Infilename[j+1] = tmp;
+						Infilename[j] = Infilename[j + 1];
+						Infilename[j + 1] = tmp;
 					}
 				}
 			}
@@ -1966,12 +1970,12 @@ right_arrow:
 			}
 			DialogBox(hInst, (LPCTSTR)IDD_FILELIST, hWnd, (DLGPROC)VideoList);
 			break;
-
+		}
 		case WM_DESTROY:
             Stop_Flag = 1;
             WaitForSingleObject(hThread, 2000);
-            _tcscpy(prog, ExePath);
-			_tcscat(prog, _T("DGIndex.ini"));
+            prog = ExePath;
+			prog += _T("DGIndex.ini");
 			SaveSettingsToFile(prog);
 
 			while (NumLoadedFiles)
@@ -1987,7 +1991,7 @@ right_arrow:
 				_aligned_free(block[i]);
 
 			for (i=0; i<MAX_FILE_NUMBER; i++)
-					free(Infilename[i]);
+					Infilename[i].Empty();
 
             free(Rdbfr);
 
@@ -2137,7 +2141,7 @@ LRESULT CALLBACK VideoList(HWND hVideoListDlg, UINT message, WPARAM wParam, LPAR
 {
 	int i, j;
 	TCHAR updown[DG_MAX_PATH];
-	LPTSTR name;
+	CString name;
 	int handle;
 
 	switch (message)
@@ -2147,7 +2151,7 @@ LRESULT CALLBACK VideoList(HWND hVideoListDlg, UINT message, WPARAM wParam, LPAR
 			SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_SETHORIZONTALEXTENT, (WPARAM) 1024, 0);  
 			if (NumLoadedFiles)
 				for (i=0; i<NumLoadedFiles; i++)
-					SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)Infilename[i]);
+					SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)Infilename[i]);
 			else
 				OpenVideoFile(hVideoListDlg);
 
@@ -2212,7 +2216,7 @@ LRESULT CALLBACK VideoList(HWND hVideoListDlg, UINT message, WPARAM wParam, LPAR
 						for (j=i; j<NumLoadedFiles; j++)
 						{
 							Infile[j] = Infile[j+1];
-							_tcscpy(Infilename[j], Infilename[j+1]);
+							Infilename[j] = Infilename[j+1];
 						}
 						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_SETCURSEL, i>=NumLoadedFiles ? NumLoadedFiles-1 : i, 0);
 					}
@@ -2288,7 +2292,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 		TCHAR curPath[DG_MAX_PATH];
 		struct _tfinddata_t seqfile;
 		int i, j, n;
-		LPTSTR tmp;
+		CString tmp;
 
 		SystemStream_Flag = ELEMENTARY_STREAM;
 		_tgetcwd(curPath, DG_MAX_PATH);
@@ -2297,7 +2301,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 			// Only one file specified.
 			if (_tfindfirst(szInput, &seqfile) == -1L) return;
 			SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM) szInput);
-			_tcscpy(Infilename[NumLoadedFiles], szInput);
+			Infilename[NumLoadedFiles] = szInput;
 			Infile[NumLoadedFiles] = _topen(szInput, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL);
 			NumLoadedFiles++;
 			// Set the output directory for a Save D2V operation to the
@@ -2339,7 +2343,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 			_tcscpy(filename, path);
 			_tcscat(filename, p);
 			if (_tfindfirst(filename, &seqfile) == -1L) break;
-			_tcscpy(Infilename[NumLoadedFiles], filename);
+			Infilename[NumLoadedFiles] = filename;
 			NumLoadedFiles++;
 			// Skip to next filename.
 			while (*p++ != 0);
@@ -2366,7 +2370,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 		// Load up the file open dialog list box and open the files.
 		for (i = 0; i < NumLoadedFiles; i++)
 		{
-			SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM) Infilename[i]);
+			SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)Infilename[i]);
 			if (Infile[i] == NULL)
                 Infile[i] = _topen(Infilename[i], _O_RDONLY | _O_BINARY | _O_SEQUENTIAL);
 		}
@@ -3955,13 +3959,13 @@ void DeleteMRUList(int index)
 {
     for (; index < 3; index++)
     {
-        _tcscpy(mMRUList[index], mMRUList[index+1]);
+        mMRUList[index] = mMRUList[index+1];
     }
-    mMRUList[3][0] = 0;
+    mMRUList[3].Empty();
     UpdateMRUList();
 }
 
-void AddMRUList(TCHAR *name)
+void AddMRUList(LPCTSTR name)
 {
     int i;
 
@@ -3975,16 +3979,16 @@ void AddMRUList(TCHAR *name)
     {
         // New name, add it to the list.
         for (i = 3; i > 0; i--)
-            _tcscpy(mMRUList[i], mMRUList[i-1]);
-        _tcscpy(mMRUList[0], name);
+            mMRUList[i] = mMRUList[i-1];
+        mMRUList[0] = name;
     }
     else
     {
         // Name exists, move it to the top.
-        _tcscpy(name, mMRUList[i]);
+        name = mMRUList[i];
         for (; i > 0; i--)
-            _tcscpy(mMRUList[i], mMRUList[i-1]);
-        _tcscpy(mMRUList[0], name);
+            mMRUList[i] = mMRUList[i-1];
+        mMRUList[0] = name;
     }
 }
 
@@ -4082,7 +4086,7 @@ void LoadSettingsFromFile(LPCTSTR pszFilename)
 		FusionAudio = 0;
 		HDDisplay = HD_DISPLAY_SHRINK_BY_HALF;
 		for (int i = 0; i < 4; i++)
-			mMRUList[i][0] = 0;
+			mMRUList[i].Empty();
 		InfoLog_Flag = 1;
 		BMPPathString[0] = 0;
 		UseMPAExtensions = 0;
@@ -4151,7 +4155,7 @@ void LoadSettingsFromFile(LPCTSTR pszFilename)
 			line[_tcslen(line) - 1] = 0;
 			p = line;
 			while (*p++ != _T('='));
-			_tcscpy(mMRUList[i], p);
+			mMRUList[i] = p;
 		}
 		fscanf(INIFile, "Enable_Info_Log=%d\n", &InfoLog_Flag);
 		_fgetts(line, DG_MAX_PATH - 1, INIFile);

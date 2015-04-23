@@ -339,11 +339,12 @@ try_again:
 				TCHAR* p = path;
 
                 if (!PathRelativePathTo(path, D2VFilePath, 0, Infilename[NumLoadedFiles-i], 0))
-					p = Infilename[NumLoadedFiles - i]; // different drives;
+					p = Infilename[NumLoadedFiles - i].GetBuffer(); // different drives;
                 // Delete leading ".\" if it is present.
 				if (p[0] == _T('.') && p[1] == _T('\\'))
                     p += 2;
 				_ftprintf(D2VFile, _T("%s\n"), p);
+				Infilename[NumLoadedFiles - i].ReleaseBuffer();
 			}
 			i--;
 		}

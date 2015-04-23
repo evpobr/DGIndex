@@ -132,6 +132,21 @@ int dprintf(LPTSTR fmt, ...)
 	return _tcslen(printString);
 }
 
+CString FindExtension(const CString& strPath)
+{
+	CString strResult;
+
+	int nPos = 0;
+	nPos = strPath.ReverseFind(_T('.'));
+	if (nPos != -1)
+	{
+		int nLength = strPath.GetLength();
+		strResult = strPath.Right(nLength - nPos);
+	}
+
+	return strResult;
+}
+
 void RemoveExtension(CString &strPath)
 {
 	RenameExtension(strPath, _T(""));
@@ -183,6 +198,13 @@ void StripPath(CString &strPath)
 		else
 			strPath = strPath.Right(nLength - nIndex - 1);
 	}
+}
+
+void AddBackslash(CString &strPath)
+{
+	if (!strPath.IsEmpty())
+		if (strPath.Right(1) != _T('\\'))
+			strPath.Append(_T("\\"));
 }
 
 void GetCurrentDirectory(CString &strBuffer)

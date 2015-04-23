@@ -83,7 +83,7 @@ another:
 					}
 					if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 					{
-						_tcscpy_s(Infilename[NumLoadedFiles], DG_MAX_PATH, cwd);
+						Infilename[NumLoadedFiles] = cwd;
 						Infile[NumLoadedFiles] = tmp;
 						NumLoadedFiles++;
 					}
@@ -139,7 +139,7 @@ another:
 						}
 						if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL)) == -1)
 							break;
-						_tcscpy(Infilename[NumLoadedFiles], cwd);
+						Infilename[NumLoadedFiles] = cwd;
 						Infile[NumLoadedFiles] = tmp;
 						NumLoadedFiles++;
 
@@ -652,7 +652,7 @@ another:
 					_tcscpy(cwd, aFName);
 				}
 				if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL)) == -1) break;
-				_tcscpy(Infilename[NumLoadedFiles], cwd);
+				Infilename[NumLoadedFiles] = cwd;
 				Infile[NumLoadedFiles] = tmp;
 				NumLoadedFiles++;
 
@@ -719,7 +719,7 @@ another:
 			}
 			if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 			{
-				_tcscpy(Infilename[NumLoadedFiles], cwd);
+				Infilename[NumLoadedFiles] = cwd;
 				Infile[NumLoadedFiles] = tmp;
 				NumLoadedFiles++;
 			}
@@ -779,7 +779,7 @@ another:
 					}
 					if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 					{
-						_tcscpy(Infilename[NumLoadedFiles], cwd);
+						Infilename[NumLoadedFiles] = cwd;
 						Infile[NumLoadedFiles] = tmp;
 						NumLoadedFiles++;
 					}

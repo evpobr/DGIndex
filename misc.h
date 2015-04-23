@@ -61,9 +61,11 @@ void timer_debug(ts* tim);
 
 // Path routines
 
+CString FindExtension(const CString& strPath);
 void RemoveExtension(CString &strPath);
 void RenameExtension(CString &strPath, const CString &strExtension);
 void RemoveFileSpec(CString &strPath);
 void StripPath(CString &strPath);
+void AddBackslash(CString &strPath);
 void GetCurrentDirectory(CString &strBuffer);
 
