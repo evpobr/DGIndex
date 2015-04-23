@@ -27,6 +27,7 @@
 #include <locale.h>
 
 // ATL headers
+#include <atlbase.h>
 #include <atlstr.h>
 
 

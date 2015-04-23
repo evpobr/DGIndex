@@ -72,8 +72,9 @@ void Normalize(FILE *WaveIn, int WaveInPos, LPCTSTR filename, FILE *WaveOut, int
 			Norm_Table[65536-i] = 32767;
 	}
 
-	_stprintf_s(szBuffer, _T("%.2f"), ratio);
-	SetDlgItemText(hDlg, IDC_INFO, szBuffer);
+	CString strRatio;
+	strRatio.Format(_T("%.2f"), ratio);
+	SetDlgItemText(hDlg, IDC_INFO, strRatio);
 
 	if (trigger)
 		TwoPass(WaveIn, WaveInPos, WaveOut, WaveOutPos, size, 1);
@@ -119,11 +120,12 @@ static void TwoPass(FILE *WaveIn, int WaveInPos, FILE *WaveOut, int WaveOutPos, 
 
 		if (Info_Flag)
 		{
-			_stprintf_s(szBuffer, _T("%d:%02d:%02d"), elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60);
-			SetDlgItemText(hDlg, IDC_ELAPSED, szBuffer);
+			CString strProgress;
+			strProgress.Format(_T("%d:%02d:%02d"), elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60);
+			SetDlgItemText(hDlg, IDC_ELAPSED, strProgress);
 
-			_stprintf_s(szBuffer, _T("%d:%02d:%02d"), remain / 3600, (remain % 3600) / 60, remain % 60);
-			SetDlgItemText(hDlg, IDC_REMAIN, szBuffer);
+			strProgress.Format(_T("%d:%02d:%02d"), remain / 3600, (remain % 3600) / 60, remain % 60);
+			SetDlgItemText(hDlg, IDC_REMAIN, strProgress);
 		}
 
 	    InvalidateRect(hwndSelect, NULL, TRUE);

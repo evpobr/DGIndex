@@ -132,3 +132,63 @@ int dprintf(LPTSTR fmt, ...)
 	return _tcslen(printString);
 }
 
+void RemoveExtension(CString &strPath)
+{
+	RenameExtension(strPath, _T(""));
+}
+
+// Removes extension from path.
+void RenameExtension(CString &strPath, const CString &strExtension)
+{
+	int nIndex = strPath.ReverseFind(_T('.'));
+	if (nIndex != -1)
+	{
+		strPath.Truncate(nIndex);
+		if (!strExtension.IsEmpty())
+		{
+			if (strExtension[0] == _T('.'))
+				strPath.Append(strExtension);
+			else
+			{
+				strPath += _T(".");
+				strPath += strExtension;
+			}
+		}
+	}
+}
+
+// Removes trailing filename and backslash: c:\dir\filename.ext -> c:\dir
+void RemoveFileSpec(CString &strPath)
+{
+	int nIndex = strPath.ReverseFind(_T('\\'));
+	if (nIndex != -1)
+	{
+		strPath.Truncate(nIndex);
+	}
+}
+
+// Removes the path portion of a fully qualified path and file
+void StripPath(CString &strPath)
+{
+	int nIndex = strPath.ReverseFind(_T('\\'));
+	if (nIndex != -1)
+	{
+		int nLength = strPath.GetLength();
+		// one symbol - backslash, do nothing
+		if (nLength != 1)
+			// directory with backslash
+			if (nIndex == nLength - 1)
+				strPath.Truncate(nIndex);
+		// directory with filename
+		else
+			strPath = strPath.Right(nLength - nIndex - 1);
+	}
+}
+
+void GetCurrentDirectory(CString &strBuffer)
+{
+	DWORD dwLength = GetCurrentDirectory(0, NULL);
+	GetCurrentDirectory(dwLength, strBuffer.GetBufferSetLength(dwLength - 1));
+	strBuffer.ReleaseBuffer();
+	
+}

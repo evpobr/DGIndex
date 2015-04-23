@@ -88,154 +88,10 @@ static void OpenAudioFile(HWND);
 DWORD WINAPI ProcessWAV(LPVOID n);
 void OutputProgress(int);
 
-void MakeAvsFromTemplate(LPCTSTR pszTemplate, LPCTSTR pszOutput)
-{
-	CHAR prog[DG_MAX_PATH];
-	CHAR path[DG_MAX_PATH];
-	LPSTR path_p, prog_p;
-	FILE *tplate, *avs;
-
-	if (*AVSTemplatePath && !_tfopen(pszOutput, _T("r")) && (tplate = _tfopen(pszTemplate, _T("r"))))
-	{
-		avs = _tfopen(pszOutput, _T("w"));
-		if (avs)
-		{
-			while (fgets(path, 1023, tplate))
-			{
-				path_p = path;
-				prog_p = prog;
-				while (1)
-				{
-					if (*path_p == 0)
-					{
-						*prog_p = 0;
-						break;
-					}
-					else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'v' &&
-						path_p[3] == 'i' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
-					{
-						// Replace __vid__ macro.
-						*prog_p = 0;
-#ifdef UNICODE
-						CHAR szD2VFilePathA[DG_MAX_PATH];
-#endif
-						if (FullPathInFiles)
-						{
-#ifdef UNICODE
-							WideCharToMultiByte(CP_ACP, 0, D2VFilePath, -1, szD2VFilePathA, -1, NULL, NULL);
-							strcat(prog_p, szD2VFilePathA);
-#else
-							strcat(prog_p, D2VFilePath);
-#endif
-							prog_p = &prog[strlen(prog)];
-							path_p += 7;
-						}
-						else
-						{
-							LPTSTR p;
-							if ((p = _tcsrchr(D2VFilePath, _T('\\'))) != 0) p++;
-							else p = D2VFilePath;
-#ifdef UNICODE
-							WideCharToMultiByte(CP_ACP, 0, p, -1, szD2VFilePathA, -1, NULL, NULL);
-							strcat(prog_p, szD2VFilePathA);
-#else
-							strcat(prog_p, p);
-#endif
-							prog_p = &prog[strlen(prog)];
-							path_p += 7;
-
-						}
-					}
-					else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'a' &&
-						path_p[3] == 'u' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
-					{
-						// Replace __aud__ macro.
-						*prog_p = 0;
-#ifdef UNICODE
-						CHAR szAudioFilePathA[DG_MAX_PATH];
-#endif
-						if (FullPathInFiles)
-						{
-#ifdef UNICODE
-							WideCharToMultiByte(CP_ACP, 0, AudioFilePath, -1, szAudioFilePathA, -1, NULL, NULL);
-							strcat(prog_p, szAudioFilePathA);
-#else
-							strcat(prog_p, AudioFilePath);
-#endif
-							prog_p = &prog[strlen(prog)];
-							path_p += 7;
-						}
-						else
-						{
-							LPTSTR p;
-							if ((p = _tcsrchr(AudioFilePath, _T('\\'))) != 0) p++;
-							else p = AudioFilePath;
-#ifdef UNICODE
-							WideCharToMultiByte(CP_ACP, 0, p, -1, szAudioFilePathA, -1, NULL, NULL);
-							strcat(prog_p, szAudioFilePathA);
-#else
-							strcat(prog_p, p);
-#endif
-							prog_p = &prog[strlen(prog)];
-							path_p += 7;
-						}
-					}
-					else if (AudioFilePath && path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'd' &&
-						path_p[3] == 'e' && path_p[4] == 'l' && path_p[5] == '_' && path_p[6] == '_')
-					{
-						// Replace __del__ macro.
-						LPTSTR d = &AudioFilePath[_tcslen(AudioFilePath) - 3];
-						int delay;
-						float fdelay;
-						TCHAR fdelay_str[32];
-#ifdef UNICODE
-						CHAR szDelayStrA[32];
-#endif
-						while (d > AudioFilePath)
-						{
-							if (d[0] == _T('m') && d[1] == _T('s') && d[2] == _T('.'))
-								break;
-							d--;
-						}
-						if (d > AudioFilePath)
-						{
-							while ((d > AudioFilePath) && d[0] != ' ') d--;
-							if (d[0] == ' ')
-							{
-								_stscanf(d, _T("%d"), &delay);
-								fdelay = (float) 0.001 * delay;
-								_stprintf_s(fdelay_str, _T("%.3f"), fdelay);
-								*prog_p = 0;
-#ifdef UNICODE
-								WideCharToMultiByte(CP_ACP, 0, fdelay_str, -1, szDelayStrA, -1, NULL, NULL);
-								strcat(prog_p, szDelayStrA);
-#else
-								strcat(prog_p, fdelay_str);
-#endif
-								prog_p = &prog[strlen(prog)];
-								path_p += 7;
-							}
-							else
-								*prog_p++ = *path_p++;
-						}
-						else
-							*prog_p++ = *path_p++;
-					}
-					else
-					{
-						*prog_p++ = *path_p++;
-					}
-				}
-				fputs(prog, avs);
-			}
-			fclose(tplate);
-			fclose(avs);
-		}
-	}
-}
-
+void MakeAvsFromTemplate(LPCTSTR pszTemplate, LPCTSTR pszOutput);
 void LoadSettingsFromFile(LPCTSTR pszFilename);
 void SaveSettingsToFile(LPCTSTR pszFilename);
+void RegisterVFAPI();
 
 static void StartupEnables(void);
 static void FileLoadedEnables(void);
@@ -607,8 +463,6 @@ TEST_END:
 			exit(0);
 		if (NumLoadedFiles)
 		{
-			TCHAR szText[1024];
-
 			// Start a LOCATE_INIT thread. When it kills itself, it will start a
 			// LOCATE_RIP thread by sending a WM_USER message to the main window.
 			PlaybackSpeed = SPEED_MAXIMUM;
@@ -740,30 +594,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Initialize_FPU_IDCT();
 
 			// register VFAPI
-			HKEY key; DWORD trash;
-
-			if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\VFPlugin"), 0, _T(""),
-				REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key, &trash) == ERROR_SUCCESS)
-			{
-				if (_tgetcwd(szBuffer, DG_MAX_PATH)!=NULL)
-				{
-					if (szBuffer[_tcslen(szBuffer) - 1] != _T('\\'))
-						_tcscat(szBuffer, _T("\\"));
-
-					_tcscpy(szPath, szBuffer);
-
-					struct _tfinddata_t vfpfile;
-					if (_tfindfirst(_T("DGVfapi.vfp"), &vfpfile) != -1L)
-					{
-						_tcscat(szBuffer, _T("DGVfapi.vfp"));
-
-						RegSetValueEx(key, _T("DGIndex"), 0, REG_SZ, (LPBYTE)szBuffer, _tcslen(szBuffer));
-						CheckMenuItem(hMenu, IDM_VFAPI, MF_CHECKED);
-					}
-
-					RegCloseKey(key);
-				}
-			}
+			RegisterVFAPI();
 
 		case WM_COMMAND:
         {
@@ -917,12 +748,13 @@ proceed:
 						if (MessageBox(hWnd, buf, _T("Force Film Warning"), MB_YESNO | MB_ICONWARNING) != IDYES)
 							break;
 					}
-					if (CLIActive || PopFileDlg(szOutput, hWnd, SAVE_D2V))
+					if (CLIActive || PopFileDlg(strOutput.GetBuffer(DG_MAX_PATH - 1), hWnd, SAVE_D2V))
 					{
-						_stprintf_s(szBuffer, _T("%s.d2v"), szOutput);
+						strOutput.ReleaseBuffer();
+						RenameExtension(strOutput, _T(".d2v"));
 						if (CLIActive)
 						{
-							if ((D2VFile = _tfopen(szBuffer, _T("w+"))) == 0)
+							if ((D2VFile = _tfopen(strOutput, _T("w+"))) == 0)
 							{
 								if (ExitOnEnd)
 								{
@@ -932,23 +764,23 @@ proceed:
 								}
 								else CLIActive = 0;
 							}
-							_tcscpy(D2VFilePath, szBuffer);
+							_tcscpy(D2VFilePath, strOutput);
 						}
 						else 
 						{
-							if (D2VFile = _tfopen(szBuffer, _T("r")))
+							if (D2VFile = _tfopen(strOutput, _T("r")))
 							{
-								TCHAR line[255];
+								CString line;
 
                                 fclose(D2VFile);
-								_stprintf_s(line, _T("%s already exists.\nDo you want to replace it?"), szBuffer);
+								line.Format(_T("%s already exists.\nDo you want to replace it?"), strOutput);
 								if (MessageBox(hWnd, line, _T("Save D2V"),
 								    MB_YESNO | MB_ICONWARNING) != IDYES)
 								    break;
 
 							}
-							D2VFile = _tfopen(szBuffer, _T("w+"));
-							_tcscpy(D2VFilePath, szBuffer);
+							D2VFile = _tfopen(strOutput, _T("w+"));
+							_tcscpy(D2VFilePath, strOutput);
 						}
 
 						if (D2VFile != 0)
@@ -957,13 +789,10 @@ proceed:
 							{
 								// Initialize quant matric logging.
 								// Generate the output file name.
-								LPTSTR p;
-								p = &szBuffer[_tcslen(szBuffer)];
-								while (*p != _T('.')) p--;
-								p[1] = 0;
-								_tcscat(p, _T("quants.txt"));
+								CString strQuantsPath = D2VFilePath;
+								RenameExtension(strQuantsPath, _T(".quants.txt"));
 								// Open the output file.
-								Quants = _tfopen(szBuffer, _T("w"));
+								Quants = _tfopen(strQuantsPath, _T("w"));
 								// Init the recorded quant matrices for change detection.
 								memset(intra_quantizer_matrix_log, 0xffffffff, sizeof(intra_quantizer_matrix_log));
 								memset(non_intra_quantizer_matrix_log, 0xffffffff, sizeof(non_intra_quantizer_matrix_log));
@@ -975,13 +804,10 @@ proceed:
 							{
 								// Initialize timestamp logging.
 								// Generate the output file name.
-								LPTSTR p;
-								p = &szBuffer[_tcslen(szBuffer)];
-								while (*p != _T('.')) p--;
-								p[1] = 0;
-								_tcscat(p, _T("timestamps.txt"));
+								CString strTimestampsPath = D2VFilePath;
+								RenameExtension(strTimestampsPath, _T(".timestamps.txt"));
 								// Open the output file.
-								Timestamps = _tfopen(szBuffer, _T("w"));
+								Timestamps = _tfopen(strTimestampsPath, _T("w"));
 								fprintf(Timestamps, "DGIndex Timestamps Dump\n\n");
 								fprintf(Timestamps, "frame rate = %f\n", frame_rate);
 							}
@@ -2084,7 +1910,7 @@ right_arrow:
 			tmp = path + _tcslen(path);
 			while (*tmp != _T('\\') && tmp >= path) tmp--;
 			tmp[1] = 0;
-			_tcscpy(szSave, path);
+			strSave = path;
 
 			ext = _tcsrchr(szInput, _T('.'));
 			if (ext!=NULL)
@@ -2480,7 +2306,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 			p = path + _tcslen(path);
 			while (*p != _T('\\') && p >= path) p--;
 			p[1] = 0;
-			_tcscpy(szSave, path);
+			strSave = path;
 			return;
 		}
 		// Multi-select handling.
@@ -2496,7 +2322,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 		// Save the path prefix (path without the filename).
 		_tcscpy(path, szInput);
 		// Also set that path as the default for a Save D2V operation.
-		_tcscpy(szSave, szInput);
+		strSave = szInput;
 		// Add a trailing backslash if needed.
 		p = szInput;
 		while (*p != 0) p++;
@@ -2550,6 +2376,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 
 void ThreadKill(int mode)
 {
+	CString strText;
 	double film_percent;
 
 	// Get rid of the % completion string in the window title.
@@ -2634,8 +2461,8 @@ void ThreadKill(int mode)
 				if (PreScale_Ratio > 1.0 && PreScale_Ratio < 1.01)
 					PreScale_Ratio = 1.0;
 
-				_stprintf_s(szBuffer, _T("%.2f"), PreScale_Ratio);
-				SetDlgItemText(hDlg, IDC_INFO, szBuffer);
+				strText.Format(_T("%.2f"), PreScale_Ratio);
+				SetDlgItemText(hDlg, IDC_INFO, strText);
 
 				CheckMenuItem(hMenu, IDM_PRESCALE, MF_CHECKED);
 				CheckMenuItem(hMenu, IDM_NORM, MF_UNCHECKED);
@@ -2788,22 +2615,22 @@ LRESULT CALLBACK Info(HWND hInfoDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 LRESULT CALLBACK About(HWND hAboutDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
+{	
 	switch (message)
 	{
-		case WM_INITDIALOG:
-			_stprintf_s(szBuffer, _T("%s"), Version);
-			SetDlgItemText(hAboutDlg, IDC_VERSION, szBuffer);
-			return true;
+	case WM_INITDIALOG:
 
-		case WM_COMMAND:
-			if (LOWORD(wParam)==IDOK || LOWORD(wParam)==IDCANCEL) 
-			{
-				EndDialog(hAboutDlg, 0);
-				return true;
-			}
+		SetDlgItemText(hAboutDlg, IDC_VERSION, Version);
+		return true;
+
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		{
+			EndDialog(hAboutDlg, 0);
+			return true;
+		}
 	}
-    return false;
+	return false;
 }
 
 LRESULT CALLBACK Cropping(HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam)
@@ -3345,7 +3172,7 @@ bool PopFileDlg(PTSTR pstrFileName, HWND hOwner, int Status)
 	ofn.nMaxFile          = MAX_FILE_NUMBER * DG_MAX_PATH - 1 ;
 	ofn.lpstrFileTitle    = 0 ;
 	ofn.lpstrFile         = pstrFileName ;
-	ofn.lpstrInitialDir   = szSave;
+	ofn.lpstrInitialDir   = strSave;
 
 	switch (Status)
 	{
@@ -3394,7 +3221,7 @@ bool PopFileDlg(PTSTR pstrFileName, HWND hOwner, int Status)
 
 			ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER;
 			// Load a default filename based on the name of the first input file.
-			if (szOutput[0] == NULL)
+			if (strOutput.IsEmpty())
 			{
 				_tcscpy(ofn.lpstrFile, Infilename[0]);
 				p = &ofn.lpstrFile[_tcslen(ofn.lpstrFile)];
@@ -3739,7 +3566,7 @@ void Recovery()
 	ResizeWindow(INIT_WIDTH, INIT_HEIGHT);	// 2-line menu antidote
 
 	if (!CLIActive)
-		szOutput[0] = 0;
+		strOutput.Empty();
 	VOB_ID = CELL_ID = 0;
 
 	SystemStream_Flag = ELEMENTARY_STREAM;
@@ -4058,8 +3885,7 @@ static void RunningEnables(void)
 
 void UpdateWindowText(void)
 {
-	TCHAR *ext;
-	TCHAR szTemp[DG_MAX_PATH];
+	CString strWindowText;
 
 	if (timing.op)
 	{
@@ -4069,11 +3895,11 @@ void UpdateWindowText(void)
 		percent = (float)(100.0*(process.run-process.start+_telli64(Infile[CurrentFile]))/(process.end-process.start));
 		remain = (int)((timing.ed-timing.op)*(100.0-percent)/percent)/1000;
 
-		_stprintf_s(szBuffer, _T("%d:%02d:%02d"), elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60);
-		SetDlgItemText(hDlg, IDC_ELAPSED, szBuffer);
+		strWindowText.Format(_T("%d:%02d:%02d"), elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60);
+		SetDlgItemText(hDlg, IDC_ELAPSED, strWindowText);
 
-		_stprintf_s(szBuffer, _T("%d:%02d:%02d"), remain / 3600, (remain % 3600) / 60, remain % 60);
-		SetDlgItemText(hDlg, IDC_REMAIN, szBuffer);
+		strWindowText.Format(_T("%d:%02d:%02d"), remain / 3600, (remain % 3600) / 60, remain % 60);
+		SetDlgItemText(hDlg, IDC_REMAIN, strWindowText);
 	}
 	else
 		remain = 0;
@@ -4082,32 +3908,32 @@ void UpdateWindowText(void)
 	{
 		if (elapsed + remain)
 		{
-			_stprintf_s(szBuffer, _T("DGIndex[%d%%] - "), (elapsed * 100) / (elapsed + remain));
+			strWindowText.Format(_T("DGIndex[%d%%] - "), (elapsed * 100) / (elapsed + remain));
 			if(bIsWindowsXPorLater)
 				PostMessage(hWnd, PROGRESS_MESSAGE, (elapsed * 100) / (elapsed + remain), 0);
 		}
 		else
 		{
-			_stprintf_s(szBuffer, _T("DGIndex[0%%] - "));
+			strWindowText.Format(_T("DGIndex[0%%] - "));
 			if(bIsWindowsXPorLater)
 				PostMessage(hWnd, PROGRESS_MESSAGE, 0, 0);
 		}
 	}
 	else
-		_stprintf_s(szBuffer, _T("DGIndex - "));
-	ext = _tcsrchr(Infilename[CurrentFile], _T('\\'));
-	if (ext)
-		_tcsncat(szBuffer, ext+1, _tcslen(Infilename[CurrentFile])-(int)(ext-Infilename[CurrentFile]));
-	else
-		_tcscat(szBuffer, Infilename[CurrentFile]);
-	_stprintf_s(szTemp, _T(" [%dx%d] [File %d/%d]"), Clip_Width, Clip_Height, CurrentFile + 1, NumLoadedFiles);
-	_tcscat(szBuffer, szTemp);
+		strWindowText = _T("DGIndex - ");
+
+	CString strPath(Infilename[CurrentFile]);
+	StripPath(strPath);
+	strWindowText += strPath;
+	CString strPathMore;
+	strPathMore.Format(_T(" [%dx%d] [File %d/%d]"), Clip_Width, Clip_Height, CurrentFile + 1, NumLoadedFiles);
+	strWindowText += strPathMore;
 	if (VOB_ID && CELL_ID)
 	{
-		_stprintf_s(szTemp, _T(" [Vob %d] [Cell %d]"), VOB_ID, CELL_ID);
-		_tcscat(szBuffer, szTemp);
+		strPathMore.Format(_T(" [Vob %d] [Cell %d]"), VOB_ID, CELL_ID);
+		strWindowText += strPathMore;
 	}
-	SetWindowText(hWnd, szBuffer);
+	SetWindowText(hWnd, strWindowText);
 }
 
 void OutputProgress(int progr)
@@ -4116,11 +3942,11 @@ void OutputProgress(int progr)
 
 	if (progr != lastprogress)
 	{
-		TCHAR percent[20];
+		CString strPercent;
 		DWORD written;
 
-		_stprintf_s(percent, _T("%d\n"), progr);
-		WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), percent, _tcslen(percent), &written, NULL);
+		strPercent.Format(_T("%d\n"), progr);
+		WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), strPercent, strPercent.GetLength(), &written, NULL);
 		lastprogress = progr;
 	}
 }
@@ -4372,5 +4198,172 @@ void SaveSettingsToFile(LPCTSTR pszFilename)
 		fprintf(INIFile, "Use_MPA_Extensions=%d\n", UseMPAExtensions);
 		fprintf(INIFile, "Notify_When_Done=%d\n", NotifyWhenDone);
 		fclose(INIFile);
+	}
+}
+
+void MakeAvsFromTemplate(LPCTSTR pszTemplate, LPCTSTR pszOutput)
+{
+	CHAR prog[DG_MAX_PATH];
+	CHAR path[DG_MAX_PATH];
+	LPSTR path_p, prog_p;
+	FILE *tplate, *avs;
+
+	if (*AVSTemplatePath && !_tfopen(pszOutput, _T("r")) && (tplate = _tfopen(pszTemplate, _T("r"))))
+	{
+		avs = _tfopen(pszOutput, _T("w"));
+		if (avs)
+		{
+			while (fgets(path, 1023, tplate))
+			{
+				path_p = path;
+				prog_p = prog;
+				while (1)
+				{
+					if (*path_p == 0)
+					{
+						*prog_p = 0;
+						break;
+					}
+					else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'v' &&
+						path_p[3] == 'i' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
+					{
+						// Replace __vid__ macro.
+						*prog_p = 0;
+#ifdef UNICODE
+						CHAR szD2VFilePathA[DG_MAX_PATH];
+#endif
+						if (FullPathInFiles)
+						{
+#ifdef UNICODE
+							WideCharToMultiByte(CP_ACP, 0, D2VFilePath, -1, szD2VFilePathA, -1, NULL, NULL);
+							strcat(prog_p, szD2VFilePathA);
+#else
+							strcat(prog_p, D2VFilePath);
+#endif
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+						}
+						else
+						{
+							LPTSTR p;
+							if ((p = _tcsrchr(D2VFilePath, _T('\\'))) != 0) p++;
+							else p = D2VFilePath;
+#ifdef UNICODE
+							WideCharToMultiByte(CP_ACP, 0, p, -1, szD2VFilePathA, -1, NULL, NULL);
+							strcat(prog_p, szD2VFilePathA);
+#else
+							strcat(prog_p, p);
+#endif
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+
+						}
+					}
+					else if (path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'a' &&
+						path_p[3] == 'u' && path_p[4] == 'd' && path_p[5] == '_' && path_p[6] == '_')
+					{
+						// Replace __aud__ macro.
+						*prog_p = 0;
+#ifdef UNICODE
+						CHAR szAudioFilePathA[DG_MAX_PATH];
+#endif
+						if (FullPathInFiles)
+						{
+#ifdef UNICODE
+							WideCharToMultiByte(CP_ACP, 0, AudioFilePath, -1, szAudioFilePathA, -1, NULL, NULL);
+							strcat(prog_p, szAudioFilePathA);
+#else
+							strcat(prog_p, AudioFilePath);
+#endif
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+						}
+						else
+						{
+							LPTSTR p;
+							if ((p = _tcsrchr(AudioFilePath, _T('\\'))) != 0) p++;
+							else p = AudioFilePath;
+#ifdef UNICODE
+							WideCharToMultiByte(CP_ACP, 0, p, -1, szAudioFilePathA, -1, NULL, NULL);
+							strcat(prog_p, szAudioFilePathA);
+#else
+							strcat(prog_p, p);
+#endif
+							prog_p = &prog[strlen(prog)];
+							path_p += 7;
+						}
+					}
+					else if (AudioFilePath && path_p[0] == '_' && path_p[1] == '_' && path_p[2] == 'd' &&
+						path_p[3] == 'e' && path_p[4] == 'l' && path_p[5] == '_' && path_p[6] == '_')
+					{
+						// Replace __del__ macro.
+						LPTSTR d = &AudioFilePath[_tcslen(AudioFilePath) - 3];
+						int delay;
+						float fdelay;
+						TCHAR fdelay_str[32];
+#ifdef UNICODE
+						CHAR szDelayStrA[32];
+#endif
+						while (d > AudioFilePath)
+						{
+							if (d[0] == _T('m') && d[1] == _T('s') && d[2] == _T('.'))
+								break;
+							d--;
+						}
+						if (d > AudioFilePath)
+						{
+							while ((d > AudioFilePath) && d[0] != ' ') d--;
+							if (d[0] == ' ')
+							{
+								_stscanf(d, _T("%d"), &delay);
+								fdelay = (float) 0.001 * delay;
+								_stprintf_s(fdelay_str, _T("%.3f"), fdelay);
+								*prog_p = 0;
+#ifdef UNICODE
+								WideCharToMultiByte(CP_ACP, 0, fdelay_str, -1, szDelayStrA, -1, NULL, NULL);
+								strcat(prog_p, szDelayStrA);
+#else
+								strcat(prog_p, fdelay_str);
+#endif
+								prog_p = &prog[strlen(prog)];
+								path_p += 7;
+							}
+							else
+								*prog_p++ = *path_p++;
+						}
+						else
+							*prog_p++ = *path_p++;
+					}
+					else
+					{
+						*prog_p++ = *path_p++;
+					}
+				}
+				fputs(prog, avs);
+			}
+			fclose(tplate);
+			fclose(avs);
+		}
+	}
+}
+
+void RegisterVFAPI()
+{
+	CRegKey cRegKey;
+	CString strPath;
+
+	if (cRegKey.Create(HKEY_CURRENT_USER, _T("Software\\VFPlugin")) == ERROR_SUCCESS)
+	{
+		GetCurrentDirectory(strPath);
+		strPath += _T("\\");
+
+		_tfinddata_t vfpfile;
+		if (_tfindfirst(_T("DGVfapi.vfp"), &vfpfile) != -1L)
+		{
+			strPath += _T("DGVfapi.vfp");
+
+			cRegKey.SetStringValue(_T("DGIndex"), strPath);
+			CheckMenuItem(hMenu, IDM_VFAPI, MF_CHECKED);
+		}
 	}
 }

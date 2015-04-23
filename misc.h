@@ -21,6 +21,10 @@
  *
  */
 
+#pragma once
+
+#include <atlstr.h>
+
 #define ui64 unsigned __int64
 
 struct ts_t
@@ -54,3 +58,12 @@ void start_timer2(ui64* timer);
 void stop_timer(ui64* timer);
 void stop_timer2(ui64* timer);
 void timer_debug(ts* tim);
+
+// Path routines
+
+void RemoveExtension(CString &strPath);
+void RenameExtension(CString &strPath, const CString &strExtension);
+void RemoveFileSpec(CString &strPath);
+void StripPath(CString &strPath);
+void GetCurrentDirectory(CString &strBuffer);
+

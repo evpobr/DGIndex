@@ -574,17 +574,17 @@ another:
 					   current directory. */
 					if (name[0] != _T('\\') && name[1] != _T(':'))
 					{
-						GetCurrentDirectory(_countof(szOutput), szOutput);
+						GetCurrentDirectory(strOutput);
 #ifdef UNICODE
-						_tcscat_s(szOutput, _T("\\"));
-						_tcscat_s(szOutput, name);
+						strOutput += _T("\\");
+						strOutput += name;
 #else
 						PathAppend(szOutput, name);
 #endif
 					}
 					else
 					{
-						_tcscpy_s(szOutput, name);
+						strOutput = name;
 					}
 				}
 			}
@@ -1180,17 +1180,17 @@ another:
             // the same way as for GUI mode.
 			if (aFName[0] != _T('\\') && aFName[1] != _T(':'))
 			{
-				GetCurrentDirectory(_countof(szOutput), szOutput);
+				GetCurrentDirectory(strOutput);
 #ifdef UNICODE
-				_tcscat(szOutput, _T("\\"));
-				_tcscat(szOutput, aFName);
+				strOutput += _T("\\");
+				strOutput += aFName;
 #else
 				PathAppend(szOutput, aFName);
 #endif
 			}
 			else
 			{
-				_tcscpy(szOutput, aFName);
+				strOutput = aFName;
 			}
 		}
 

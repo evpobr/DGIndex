@@ -339,7 +339,8 @@ XTN int hadRGoption;
 XTN int WindowMode;
 XTN HWND hWnd, hDlg, hTrack;
 XTN HWND hwndSelect;
-XTN TCHAR szInput[MAX_FILE_NUMBER*DG_MAX_PATH], szOutput[DG_MAX_PATH], szBuffer[DG_MAX_PATH], szSave[DG_MAX_PATH];
+XTN TCHAR szInput[MAX_FILE_NUMBER*DG_MAX_PATH];
+XTN CString strOutput, strSave;
 
 XTN unsigned char *backward_reference_frame[3], *forward_reference_frame[3];
 XTN unsigned char *auxframe[3], *current_frame[3];

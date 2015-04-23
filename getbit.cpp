@@ -792,16 +792,13 @@ emulated3:
 					}
 					if (AudioOnly_Flag)
 					{
-						TCHAR *p;
+						strOutput = Infilename[0];
+						RemoveExtension(strOutput);
 
-						_tcscpy(szOutput, Infilename[0]);
-						p = &szOutput[_countof(szOutput)];
-						while (*p != _T('.')) p--;
-						*p = 0;
 						if (audio[0].type == FORMAT_AAC)
-							strAudioFileName.Format(_T("%s PID %03x.aac"), szOutput, MPEG2_Transport_AudioPID);
+							strAudioFileName.Format(_T("%s PID %03x.aac"), strOutput, MPEG2_Transport_AudioPID);
 						else
-							strAudioFileName.Format(_T("%s PID %03x %s %s %s %s.%s"), szOutput, MPEG2_Transport_AudioPID,
+							strAudioFileName.Format(_T("%s PID %03x %s %s %s %s.%s"), strOutput, MPEG2_Transport_AudioPID,
 									MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 									MPARate[audio[0].layer][audio[0].rate],
                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -819,9 +816,9 @@ emulated3:
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
 						{
 							if (audio[0].type == FORMAT_AAC)
-								strAudioFileName.Format(_T("%s PID %03x.aac"), szOutput, MPEG2_Transport_AudioPID);
+								strAudioFileName.Format(_T("%s PID %03x.aac"), strOutput, MPEG2_Transport_AudioPID);
 							else
-								strAudioFileName.Format(_T("%s PID %03x %s %s %s %s.%s"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %s %s %s %s.%s"), strOutput, MPEG2_Transport_AudioPID,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate],
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -829,9 +826,9 @@ emulated3:
 						else
 						{
 							if (audio[0].type == FORMAT_AAC)
-								strAudioFileName.Format(_T("%s PID %03x DELAY %dms.aac"), szOutput, MPEG2_Transport_AudioPID, PTSDiff);
+								strAudioFileName.Format(_T("%s PID %03x DELAY %dms.aac"), strOutput, MPEG2_Transport_AudioPID, PTSDiff);
 							else
-								strAudioFileName.Format(_T("%s PID %03x %s %s %s %s DELAY %dms.%s"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %s %s %s %s DELAY %dms.%s"), strOutput, MPEG2_Transport_AudioPID,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate], PTSDiff,
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -924,12 +921,10 @@ emulated3:
 
 					if (AudioOnly_Flag)
 					{
-						TCHAR *p;
-						_tcscpy_s(szOutput, Infilename[0]);
-						p = &szOutput[_countof(szOutput)];
-						while (*p != _T('.')) p--;
-						*p = 0;
-						strAudioFileName.Format(_T("%s %s PID %03x.%s"), szOutput, strEXT, MPEG2_Transport_AudioPID, strext);
+						strOutput = Infilename[0];
+						RemoveExtension(strOutput);
+
+						strAudioFileName.Format(_T("%s %s PID %03x.%s"), strOutput, strEXT, MPEG2_Transport_AudioPID, strext);
 					}
 					else
 					{
@@ -943,10 +938,10 @@ emulated3:
 
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
 							strAudioFileName.Format(_T("%s %s PID %03x.%s"),
-									szOutput, strEXT, MPEG2_Transport_AudioPID, strext);
+									strOutput, strEXT, MPEG2_Transport_AudioPID, strext);
 						else
 							strAudioFileName.Format(_T("%s %s PID %03x DELAY %dms.%s"),
-									szOutput, strEXT, MPEG2_Transport_AudioPID, PTSDiff, strext);
+									strOutput, strEXT, MPEG2_Transport_AudioPID, PTSDiff, strext);
 					}
 					if (D2V_Flag || AudioOnly_Flag)
 					{
@@ -1106,7 +1101,7 @@ oops2:
 					{
 						InitialAC3();
 
-						strAudioFileName.Format(_T("%s PID %03x %sch %dKbps %s.wav"), szOutput, MPEG2_Transport_AudioPID,
+						strAudioFileName.Format(_T("%s PID %03x %sch %dKbps %s.wav"), strOutput, MPEG2_Transport_AudioPID,
 							AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate], FTType[SRC_Flag]);
 
 						_tcscpy(audio[0].filename, strAudioFileName);
@@ -1173,12 +1168,10 @@ oops2:
 					{
 						if (AudioOnly_Flag)
 						{
-							TCHAR *p;
-							_tcscpy(szOutput, Infilename[0]);
-							p = &szOutput[_countof(szOutput)];
-							while (*p != _T('.')) p--;
-							*p = 0;
-							strAudioFileName.Format(_T("%s PID %03x %sch %dKbps.ac3"), szOutput, MPEG2_Transport_AudioPID,
+							strOutput = Infilename[0];
+							RemoveExtension(strOutput);
+
+							strAudioFileName.Format(_T("%s PID %03x %sch %dKbps.ac3"), strOutput, MPEG2_Transport_AudioPID,
 								AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate]);
 						}
 						else
@@ -1192,10 +1185,10 @@ oops2:
 							}
 
 							if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-								strAudioFileName.Format(_T("%s PID %03x %sch %dKbps.ac3"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %sch %dKbps.ac3"), strOutput, MPEG2_Transport_AudioPID,
 									AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate]);
 							else
-								strAudioFileName.Format(_T("%s PID %03x %sch %dKbps DELAY %dms.ac3"), szOutput, MPEG2_Transport_AudioPID,
+								strAudioFileName.Format(_T("%s PID %03x %sch %dKbps DELAY %dms.ac3"), strOutput, MPEG2_Transport_AudioPID,
 									AC3ModeDash[audio[0].mode], AC3Rate[audio[0].rate], PTSDiff);
 						}
 
@@ -1339,12 +1332,10 @@ oops2:
 
 					if (AudioOnly_Flag)
 					{
-						TCHAR *p;
-						_tcscpy(szOutput, Infilename[0]);
-						p = &szOutput[_countof(szOutput)];
-						while (*p != _T('.')) p--;
-						*p = 0;
-						strAudioFileName.Format(_T("%s PID %03x.dts"), szOutput, MPEG2_Transport_AudioPID);
+						strOutput = Infilename[0];
+						RemoveExtension(strOutput);
+
+						strAudioFileName.Format(_T("%s PID %03x.dts"), strOutput, MPEG2_Transport_AudioPID);
 					}
 					else
 					{
@@ -1357,9 +1348,9 @@ oops2:
 						}
 
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-							strAudioFileName.Format(_T("%s PID %03x.dts"), szOutput, MPEG2_Transport_AudioPID);
+							strAudioFileName.Format(_T("%s PID %03x.dts"), strOutput, MPEG2_Transport_AudioPID);
 						else
-							strAudioFileName.Format(_T("%s PID %03x DELAY %dms.dts"), szOutput, MPEG2_Transport_AudioPID, PTSDiff);
+							strAudioFileName.Format(_T("%s PID %03x DELAY %dms.dts"), strOutput, MPEG2_Transport_AudioPID, PTSDiff);
 					}
 					if (D2V_Flag || AudioOnly_Flag)
 					{
@@ -1588,15 +1579,13 @@ emulated0:
 
 					if (AudioOnly_Flag)
 					{
-						TCHAR *p;
-						_tcscpy(szOutput, Infilename[0]);
-						p = &szOutput[_countof(szOutput)];
-						while (*p != _T('.')) p--;
-						*p = 0;
+						strOutput = Infilename[0];
+						RemoveExtension(strOutput);
+
 						if (audio[0].type == FORMAT_AAC)
-							strAudioFileName.Format(_T("%s.aac"), szOutput);
+							strAudioFileName.Format(_T("%s.aac"), strOutput);
 						else
-							strAudioFileName.Format(_T("%s %s %s %s %s.%s"), szOutput,
+							strAudioFileName.Format(_T("%s %s %s %s %s.%s"), strOutput,
 									MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 									MPARate[audio[0].layer][audio[0].rate],
                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -1613,9 +1602,9 @@ emulated0:
 						if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
 						{
 							if (audio[0].type == FORMAT_AAC)
-								strAudioFileName.Format(_T("%s.aac"), szOutput);
+								strAudioFileName.Format(_T("%s.aac"), strOutput);
 							else
-								strAudioFileName.Format(_T("%s %s %s %s %s.%s"), szOutput,
+								strAudioFileName.Format(_T("%s %s %s %s %s.%s"), strOutput,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate],
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -1623,9 +1612,9 @@ emulated0:
 						else
 						{
 							if (audio[0].type == FORMAT_AAC)
-								strAudioFileName.Format(_T("%s DELAY %dms.aac"), szOutput, PTSDiff);
+								strAudioFileName.Format(_T("%s DELAY %dms.aac"), strOutput, PTSDiff);
 							else
-								strAudioFileName.Format(_T("%s %s %s %s %s DELAY %dms.%s"), szOutput,
+								strAudioFileName.Format(_T("%s %s %s %s %s DELAY %dms.%s"), strOutput,
 										MPALayer[audio[0].layer], MPAMode[audio[0].mode], MPASample[audio[0].sample],
 										MPARate[audio[0].layer][audio[0].rate], PTSDiff,
                                         UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[0].layer]);
@@ -1878,7 +1867,7 @@ oops:
 							{
 								InitialAC3();
 
-								strAudioFileName.Format(_T("%s T%x %sch %dKbps %s.wav"), szOutput, AUDIO_ID,
+								strAudioFileName.Format(_T("%s T%x %sch %dKbps %s.wav"), strOutput, AUDIO_ID,
 									AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate], FTType[SRC_Flag]);
 
 								_tcscpy(audio[AUDIO_ID].filename, strAudioFileName);
@@ -1943,13 +1932,10 @@ oops:
 							{
 								if (AudioOnly_Flag)
 								{
-									TCHAR *p;
-									_tcscpy(szOutput, Infilename[0]);
-									p = &szOutput[_countof(szOutput)];
-									while (*p != _T('.')) p--;
-									*p = 0;
+									strOutput = Infilename[0];
+									RemoveExtension(strOutput);
 
-									strAudioFileName.Format(_T("%s T%x %sch %dKbps.ac3"), szOutput, AUDIO_ID,
+									strAudioFileName.Format(_T("%s T%x %sch %dKbps.ac3"), strOutput, AUDIO_ID,
 										AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate]);
 								}
 								else
@@ -1963,10 +1949,10 @@ oops:
 									}
 
 									if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-										strAudioFileName.Format(_T("%s T%x %sch %dKbps.ac3"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %sch %dKbps.ac3"), strOutput, AUDIO_ID,
 											AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate]);
 									else
-										strAudioFileName.Format(_T("%s T%x %sch %dKbps DELAY %dms.ac3"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %sch %dKbps DELAY %dms.ac3"), strOutput, AUDIO_ID,
 											AC3ModeDash[audio[AUDIO_ID].mode], AC3Rate[audio[AUDIO_ID].rate], PTSDiff);
 
 	//								dprintf("DGIndex: Using Video PTS = %d, Audio PTS = %d [%d], reference = %d, rate = %f\n",
@@ -2033,13 +2019,11 @@ oops:
 							{
 								if (AudioOnly_Flag)
 								{
-									TCHAR *p;
-									_tcscpy(szOutput, Infilename[0]);
-									p = &szOutput[_countof(szOutput)];
-									while (*p != _T('.')) p--;
-									*p = 0;
+									strOutput = Infilename[0];
+									RemoveExtension(strOutput);
+
 									strAudioFileName.Format(_T("%s T%x %s %s %dch.wav"),
-										szOutput,
+										strOutput,
 										AUDIO_ID,
 										(audio[AUDIO_ID].format & 0x30) == 0 ? _T("48K") : _T("96K"),
 										(audio[AUDIO_ID].format & 0xc0) == 0 ? _T("16bit") : ((audio[AUDIO_ID].format & 0xc0) == 0x40 ? _T("20bit") : _T("24bit")),
@@ -2063,7 +2047,7 @@ oops:
 
 
 									strAudioFileName.Format(_T("%s T%x %s %s %dch.wav"),
-										szOutput,
+										strOutput,
 										AUDIO_ID,
 										(audio[AUDIO_ID].format & 0x30) == 0 ? _T("48K") : _T("96K"),
 										(audio[AUDIO_ID].format & 0xc0) == 0 ? _T("16bit") : ((audio[AUDIO_ID].format & 0xc0) == 0x40 ? _T("20bit") : _T("24bit")),
@@ -2138,12 +2122,10 @@ oops:
 							{
 								if (AudioOnly_Flag)
 								{
-									TCHAR *p;
-									_tcscpy_s(szOutput, Infilename[0]);
-									p = &szOutput[_countof(szOutput)];
-									while (*p != _T('.')) p--;
-									*p = 0;
-									strAudioFileName.Format(_T("%s T%x.dts"), szOutput, AUDIO_ID);
+									strOutput = Infilename[0];
+									RemoveExtension(strOutput);
+
+									strAudioFileName.Format(_T("%s T%x.dts"), strOutput, AUDIO_ID);
 								}
 								else
 								{
@@ -2156,9 +2138,9 @@ oops:
 									}
 
 									if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-										strAudioFileName.Format(_T("%s T%x.dts"), szOutput, AUDIO_ID);
+										strAudioFileName.Format(_T("%s T%x.dts"), strOutput, AUDIO_ID);
 									else
-										strAudioFileName.Format(_T("%s T%x DELAY %dms.dts"), szOutput, AUDIO_ID, PTSDiff);
+										strAudioFileName.Format(_T("%s T%x DELAY %dms.dts"), strOutput, AUDIO_ID, PTSDiff);
 								}
 
 								audio[AUDIO_ID].file = OpenAudio(strAudioFileName, _T("wb"), AUDIO_ID);
@@ -2274,12 +2256,10 @@ emulated1:
 							{
 								if (AudioOnly_Flag)
 								{
-									TCHAR *p;
-									_tcscpy(szOutput, Infilename[0]);
-									p = &szOutput[_countof(szOutput)];
-									while (*p != _T('.')) p--;
-									*p = 0;
-									strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+									strOutput = Infilename[0];
+									RemoveExtension(strOutput);
+
+									strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), strOutput, AUDIO_ID,
 											MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 											MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                             UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
@@ -2295,12 +2275,12 @@ emulated1:
 									}
 
 									if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-										strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), strOutput, AUDIO_ID,
 												MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                                 UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
  									else
-										strAudioFileName.Format(_T("%s T%x %s %s %s %s DELAY %dms.%s"), szOutput, AUDIO_ID,
+										strAudioFileName.Format(_T("%s T%x %s %s %s %s DELAY %dms.%s"), strOutput, AUDIO_ID,
 												MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate], PTSDiff,
                                                 UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
@@ -2394,12 +2374,10 @@ emulated2:
 								{
 									if (AudioOnly_Flag)
 									{
-										TCHAR *p;
-										_tcscpy(szOutput, Infilename[0]);
-										p = &szOutput[_countof(szOutput)];
-										while (*p != _T('.')) p--;
-										*p = 0;
-										strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+										strOutput = Infilename[0];
+										RemoveExtension(strOutput);
+
+										strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), strOutput, AUDIO_ID,
 												MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                                 UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
@@ -2415,12 +2393,12 @@ emulated2:
 										}
 
 										if (PTSDifference(AudioPTS, VideoPTS, &PTSDiff))
-											strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), szOutput, AUDIO_ID,
+											strAudioFileName.Format(_T("%s T%x %s %s %s %s.%s"), strOutput, AUDIO_ID,
 													MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 													MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate],
                                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
 										else
-											strAudioFileName.Format(_T("%s T%x %s %s %s %s DELAY %dms.%s"), szOutput, AUDIO_ID,
+											strAudioFileName.Format(_T("%s T%x %s %s %s %s DELAY %dms.%s"), strOutput, AUDIO_ID,
 												    MPALayer[audio[AUDIO_ID].layer], MPAMode[audio[AUDIO_ID].mode], MPASample[audio[AUDIO_ID].sample],
 												    MPARate[audio[AUDIO_ID].layer][audio[AUDIO_ID].rate], PTSDiff,
                                                     UseMPAExtensions ? MPAExtension[0] : MPAExtension[audio[AUDIO_ID].layer]);
