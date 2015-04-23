@@ -274,7 +274,7 @@ XTN bool AudioOnly_Flag;
 XTN unsigned int AudioPktCount;
 XTN bool Display_Flag;
 XTN int Fault_Flag;
-XTN int CurrentFile;
+XTN size_t CurrentFile;
 XTN int NumLoadedFiles;
 XTN int FO_Flag;
 XTN int iDCT_Flag;
@@ -294,8 +294,8 @@ XTN __int64 PackHeaderPosition;
 
 XTN int LeadingBFrames;
 XTN int ForceOpenGops;
-XTN TCHAR AVSTemplatePath[DG_MAX_PATH];
-XTN TCHAR BMPPathString[DG_MAX_PATH];
+XTN CString AVSTemplatePath;
+XTN CString BMPPathString;
 XTN int FullPathInFiles;
 XTN int LoopPlayback;
 XTN int FusionAudio;
@@ -325,7 +325,7 @@ XTN HDC hDC;
 XTN int CLIActive;
 XTN char CLIPreview;
 XTN char ExitOnEnd;
-XTN TCHAR ExePath[DG_MAX_PATH];
+XTN CString ExePath;
 XTN FILE *D2VFile;
 XTN TCHAR D2VFilePath[DG_MAX_PATH];
 XTN TCHAR AudioFilePath[DG_MAX_PATH];
@@ -381,7 +381,7 @@ XTN double max_rate;
 XTN int Clip_Left, Clip_Right, Clip_Top, Clip_Bottom;
 
 XTN int Infile[MAX_FILE_NUMBER];
-XTN CString Infilename[MAX_FILE_NUMBER];
+XTN CAtlArray<CString> Infilename;
 XTN __int64 Infilelength[MAX_FILE_NUMBER];
 XTN __int64	Infiletotal;
 

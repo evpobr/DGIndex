@@ -83,7 +83,7 @@ another:
 					}
 					if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 					{
-						Infilename[NumLoadedFiles] = cwd;
+						Infilename.Add(cwd);
 						Infile[NumLoadedFiles] = tmp;
 						NumLoadedFiles++;
 					}
@@ -139,7 +139,7 @@ another:
 						}
 						if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL)) == -1)
 							break;
-						Infilename[NumLoadedFiles] = cwd;
+						Infilename.Add(cwd);
 						Infile[NumLoadedFiles] = tmp;
 						NumLoadedFiles++;
 
@@ -470,7 +470,7 @@ another:
 					if (*p == _T('-') || *p == 0)
 					{
 						// A null file name specifies no template.
-						AVSTemplatePath[0] = 0;
+						AVSTemplatePath.Empty();
 						p--;
 					}
 					else
@@ -521,12 +521,12 @@ another:
 						{
 							// Looks good; save the path.
 							fclose(bf);
-							_tcscpy_s(AVSTemplatePath, cwd);
+							AVSTemplatePath = cwd;
 						}
 						else
 						{
 							// Something is wrong, so don't use a template.
-							AVSTemplatePath[0] = 0;
+							AVSTemplatePath.Empty();
 						}
 					}
 				}
@@ -652,7 +652,7 @@ another:
 					_tcscpy(cwd, aFName);
 				}
 				if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL)) == -1) break;
-				Infilename[NumLoadedFiles] = cwd;
+				Infilename.Add(cwd);
 				Infile[NumLoadedFiles] = tmp;
 				NumLoadedFiles++;
 
@@ -719,7 +719,7 @@ another:
 			}
 			if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 			{
-				Infilename[NumLoadedFiles] = cwd;
+				Infilename.Add(cwd);
 				Infile[NumLoadedFiles] = tmp;
 				NumLoadedFiles++;
 			}
@@ -779,7 +779,7 @@ another:
 					}
 					if ((tmp = _topen(cwd, _O_RDONLY | _O_BINARY)) != -1)
 					{
-						Infilename[NumLoadedFiles] = cwd;
+						Infilename.Add(cwd);
 						Infile[NumLoadedFiles] = tmp;
 						NumLoadedFiles++;
 					}
@@ -1114,7 +1114,7 @@ another:
 			if (ptr == (LPTSTR) 1 || *ptr == delimiter2[0])
 			{
 				// A null file name specifies no template.
-				AVSTemplatePath[0] = 0;
+				AVSTemplatePath.Empty();
 			}
 			else
 			{
@@ -1145,12 +1145,12 @@ another:
 				{
 					// Looks good; save the path.
 					fclose(bf);
-					_tcscpy(AVSTemplatePath, cwd);
+					AVSTemplatePath = cwd;
 				}
 				else
 				{
 					// Something is wrong, so don't use a template.
-					AVSTemplatePath[0] = 0;
+					AVSTemplatePath.Empty();
 				}
 			}
 		}

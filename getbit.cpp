@@ -2606,14 +2606,14 @@ void Fill_Buffer()
 
 void Next_File()
 {
-	int i, bytes;
+	int bytes;
 	unsigned char *p;
 	
-	if (CurrentFile < NumLoadedFiles-1)
+	if (CurrentFile < Infilename.GetCount() -1)
 	{
 		CurrentFile++;
 		process.run = 0;
-		for (i=0; i<CurrentFile; i++) process.run += Infilelength[i];
+		for (size_t i = 0; i<CurrentFile; i++) process.run += Infilelength[i];
 		_lseeki64(Infile[CurrentFile], 0, SEEK_SET);
 		bytes = _donread(Infile[CurrentFile], Rdbfr + Read, BUFFER_SIZE - Read);
 //		dprintf("DGIndex: Next file at %d\n", Rdbfr + Read);
@@ -2867,7 +2867,7 @@ void UpdateInfo()
 	{
 		unsigned int hours, mins, secs;
 		__int64 processed;
-		int i, trackpos;
+		int trackpos;
 		CString strText;
 
 		pts = AudioPTS/90000;
@@ -2876,7 +2876,8 @@ void UpdateInfo()
 		secs = pts % 60;
 		strText.Format(_T("%d:%02d:%02d"), hours, mins, secs);
 		SetDlgItemText(hDlg, IDC_TIMESTAMP, strText);
-		for (i = 0, processed = 0; i < CurrentFile; i++)
+		processed = 0;
+		for (size_t i = 0; i < CurrentFile; i++)
 		{
 			processed += Infilelength[i];
 		}

@@ -163,18 +163,21 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	}
 
 	// Get the path to the DGIndex executable.
-	GetModuleFileName(NULL, ExePath, DG_MAX_PATH);
+	GetModuleFileName(NULL, ExePath.GetBuffer(MAX_PATH - 1), DG_MAX_PATH);
+	ExePath.ReleaseBuffer();
 
 	// Find first char after last backslash.
 
-    if ((ptr = _tcsrchr(ExePath,_T('\\'))) != 0) ptr++;
-    else ptr = ExePath;
-	*ptr = 0;
+	int nLength = ExePath.GetLength();
+	if (ExePath[nLength - 1] == _T('\\'))
+	{		
+		ExePath.Truncate(nLength - 1);
+	}
 
 	// Load INI
-	_tcscpy(prog, ExePath);
-	_tcscat(prog, _T("DGIndex.ini"));
-	LoadSettingsFromFile(prog);
+	CPath pathIni;
+	pathIni.Combine(ExePath, _T("DGIndex.ini"));
+	LoadSettingsFromFile(pathIni);
 
 
     // Allocate stream buffer.
@@ -194,7 +197,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	hInst = hInstance;
 
 	// Load accelerators
-	hAccel = LoadAccelerators(hInst, (LPCTSTR)IDR_ACCELERATOR);
+	hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_ACCELERATOR));
 
 	// Initialize global strings
 	LoadString(hInst, IDC_GUI, szWindowClass, DG_MAX_PATH);
@@ -585,8 +588,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //				splash = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_SPLASH));
 //			}
 
-			for (i=0; i<MAX_FILE_NUMBER; i++)
-				Infilename[i] = (TCHAR*)malloc(DG_MAX_PATH * sizeof(TCHAR));
+			//TODO: CAtlArray check it
+			// for (i=0; i<MAX_FILE_NUMBER; i++)
+				//Infilename[i] = (TCHAR*)malloc(DG_MAX_PATH * sizeof(TCHAR));
 
 			for (i=0; i<8; i++)
 				block[i] = (short *)_aligned_malloc(sizeof(short)*64, 64);
@@ -615,9 +619,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         int tmp;
 
                         NumLoadedFiles = 0;
+						Infilename.RemoveAll();
+
                         if ((tmp = _topen(mMRUList[wmId - ID_MRU_FILE0], _O_RDONLY | _O_BINARY)) != -1)
 						{
-                            Infilename[NumLoadedFiles] = mMRUList[wmId - ID_MRU_FILE0];
+                            Infilename.Add(mMRUList[wmId - ID_MRU_FILE0]);
 					        Infile[NumLoadedFiles] = tmp;
                             NumLoadedFiles = 1;
  			                Recovery();
@@ -1940,7 +1946,7 @@ right_arrow:
 				struct _tfinddata_t seqfile;
 				if (_tfindfirst(szInput, &seqfile) != -1L)
 				{
-					Infilename[NumLoadedFiles] = szInput;
+					Infilename.Add(szInput);
 					NumLoadedFiles++;
 					SystemStream_Flag = ELEMENTARY_STREAM;
 				}
@@ -1990,8 +1996,9 @@ right_arrow:
 			for (i=0; i<8; i++)
 				_aligned_free(block[i]);
 
-			for (i=0; i<MAX_FILE_NUMBER; i++)
-					Infilename[i].Empty();
+			// for (i=0; i<MAX_FILE_NUMBER; i++)
+			// 		Infilename[i].Empty();
+			Infilename.RemoveAll();
 
             free(Rdbfr);
 
@@ -2140,7 +2147,7 @@ LRESULT CALLBACK DetectPids(HWND hDialog, UINT message, WPARAM wParam, LPARAM lP
 LRESULT CALLBACK VideoList(HWND hVideoListDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int i, j;
-	TCHAR updown[DG_MAX_PATH];
+	CString updown;
 	CString name;
 	int handle;
 
@@ -2180,9 +2187,9 @@ LRESULT CALLBACK VideoList(HWND hVideoListDlg, UINT message, WPARAM wParam, LPAR
 						handle = Infile[i];
 						Infile[i] = Infile[i-1];
 						Infile[i-1] = handle;
-						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_GETTEXT, i - 1, (LPARAM) updown);
+						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_GETTEXT, i - 1, (LPARAM)(LPCTSTR)updown);
 						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_DELETESTRING, i - 1, 0);
-						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_INSERTSTRING, i, (LPARAM) updown);
+						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_INSERTSTRING, i, (LPARAM)(LPCTSTR)updown);
 						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_SETCURSEL, i - 1, 0);
 					}
 					break;
@@ -2198,9 +2205,9 @@ LRESULT CALLBACK VideoList(HWND hVideoListDlg, UINT message, WPARAM wParam, LPAR
 						handle = Infile[i];
 						Infile[i] = Infile[i+1];
 						Infile[i+1] = handle;
-						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_GETTEXT, i, (LPARAM) updown);
+						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_GETTEXT, i, (LPARAM)(LPCTSTR)updown);
 						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_DELETESTRING, i, 0);
-						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_INSERTSTRING, i + 1, (LPARAM) updown);
+						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_INSERTSTRING, i + 1, (LPARAM)(LPCTSTR)updown);
 						SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_SETCURSEL, i + 1, 0);
 					}
 					break;
@@ -2301,7 +2308,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 			// Only one file specified.
 			if (_tfindfirst(szInput, &seqfile) == -1L) return;
 			SendDlgItemMessage(hVideoListDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM) szInput);
-			Infilename[NumLoadedFiles] = szInput;
+			Infilename.Add(szInput);
 			Infile[NumLoadedFiles] = _topen(szInput, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL);
 			NumLoadedFiles++;
 			// Set the output directory for a Save D2V operation to the
@@ -2343,7 +2350,7 @@ static void OpenVideoFile(HWND hVideoListDlg)
 			_tcscpy(filename, path);
 			_tcscat(filename, p);
 			if (_tfindfirst(filename, &seqfile) == -1L) break;
-			Infilename[NumLoadedFiles] = filename;
+			Infilename.Add(filename);
 			NumLoadedFiles++;
 			// Skip to next filename.
 			while (*p++ != 0);
@@ -2829,21 +2836,23 @@ LRESULT CALLBACK AVSTemplate(HWND hDialog, UINT message, WPARAM wParam, LPARAM l
 			switch (LOWORD(wParam))
 			{
 				case IDC_NO_TEMPLATE:
-					AVSTemplatePath[0] = 0;
+					AVSTemplatePath.Empty();
 					strTemp.Format(_T("%s"), _T(""));
 					SetDlgItemText(hDialog, IDC_AVS_TEMPLATE, strTemp);
 					ShowWindow(hDialog, SW_SHOW);
 					EndDialog(hDialog, 0);
 					return true;
 				case IDC_CHANGE_TEMPLATE:
-					if (PopFileDlg(AVSTemplatePath, hWnd, OPEN_AVS))
+					if (PopFileDlg(AVSTemplatePath.GetBuffer(DG_MAX_PATH - 1), hWnd, OPEN_AVS))
 					{
+						AVSTemplatePath.ReleaseBuffer();
 						strTemp.Format(_T("%s"), AVSTemplatePath);
 						SetDlgItemText(hDialog, IDC_AVS_TEMPLATE, strTemp);
 					}
 					else
 					{
-						AVSTemplatePath[0] = 0;
+						AVSTemplatePath.ReleaseBuffer();
+						AVSTemplatePath.Empty();
 						strTemp.Format(_T("%s"), _T(""));
 						SetDlgItemText(hDialog, IDC_AVS_TEMPLATE, strTemp);
 					}
@@ -2876,7 +2885,8 @@ LRESULT CALLBACK BMPPath(HWND hDialog, UINT message, WPARAM wParam, LPARAM lPara
 			switch (LOWORD(wParam))
 			{
 				case IDC_BMP_PATH_OK:
-					GetDlgItemText(hDialog, IDC_BMP_PATH, BMPPathString, DG_MAX_PATH - 1);
+					GetDlgItemText(hDialog, IDC_BMP_PATH, BMPPathString.GetBuffer(DG_MAX_PATH - 1), DG_MAX_PATH - 1);
+					BMPPathString.ReleaseBuffer();
 					ShowWindow(hDialog, SW_SHOW);
 					EndDialog(hDialog, 0);
 					return true;
@@ -3231,6 +3241,7 @@ bool PopFileDlg(PTSTR pstrFileName, HWND hOwner, int Status)
 			TCHAR *p;
 
 			ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER;
+			ofn.lpstrDefExt = _T("d2v");
 			// Load a default filename based on the name of the first input file.
 			if (strOutput.IsEmpty())
 			{
@@ -3242,13 +3253,8 @@ bool PopFileDlg(PTSTR pstrFileName, HWND hOwner, int Status)
 					*p = 0;
 				}
 			}
-			if (GetSaveFileName(&ofn))
-			{
-				ext = _tcsrchr(pstrFileName, _T('.'));
-				if (ext != NULL && !_tcsnicmp(ext, _T(".d2v"), 4))
-					*ext = 0;
-				return true;
-			}
+			return GetSaveFileName(&ofn);
+
 			break;
 			}
 	}
@@ -4025,23 +4031,28 @@ void UpdateMRUList(void)
 
 	for (;;)
     {
-        TCHAR path[DG_MAX_PATH];
+        CString path;
 
-        if (!mMRUList[index][0])
+        if (mMRUList[index].IsEmpty())
             break;
 
-        _tcscpy(path, mMRUList[index]);
-        PathCompactPath(GetDC(hWnd), path, 320);
+        path = mMRUList[index];
+        PathCompactPath(GetDC(hWnd), path.GetBuffer(MAX_PATH - 1), 320);
+		path.ReleaseBuffer();
 
 		m.fMask		= MIIM_TYPE | MIIM_STATE | MIIM_ID;
 		m.fType		= MFT_STRING;
 		m.fState	= MFS_ENABLED;
-		m.dwTypeData	= path;
+		m.dwTypeData	= path.GetBuffer(MAX_PATH - 1);
 		m.cch		= DG_MAX_PATH;
 		m.wID		= ID_MRU_FILE0 + index;
 
-		if (!InsertMenuItem(hmenuFile, MRU_LIST_POSITION+index, TRUE, &m))
-            break;
+		BOOL bResult = InsertMenuItem(hmenuFile, MRU_LIST_POSITION + index, TRUE, &m);
+		path.ReleaseBuffer();
+
+		if (!bResult)
+			break;
+
 		if (++index >= 4)
             break;
 	}
@@ -4062,7 +4073,6 @@ void UpdateMRUList(void)
 
 void LoadSettingsFromFile(LPCTSTR pszFilename)
 {
-	LPTSTR ptr;
 
 	if ((INIFile = _tfopen(pszFilename, _T("r"))) == NULL)
 	{
@@ -4084,12 +4094,11 @@ void LoadSettingsFromFile(LPCTSTR pszFilename)
 		ForceOpenGops = 0;
 		// Default the AVS template path.
 		// Get the path to the DGIndex executable.
-		GetModuleFileName(NULL, AVSTemplatePath, 255);
+		GetModuleFileName(NULL, AVSTemplatePath.GetBuffer(MAX_PATH -1), 255);
+		AVSTemplatePath.ReleaseBuffer();
 		// Find first char after last backslash.
-		if ((ptr = _tcsrchr(AVSTemplatePath, _T('\\'))) != 0) ptr++;
-		else ptr = AVSTemplatePath;
-		*ptr = 0;
-		_tcscat(AVSTemplatePath, _T("template.avs"));
+		RemoveFileSpec(AVSTemplatePath);
+		AVSTemplatePath += _T("\\template.avs");
 		FullPathInFiles = 1;
 		LoopPlayback = 0;
 		FusionAudio = 0;
@@ -4097,7 +4106,7 @@ void LoadSettingsFromFile(LPCTSTR pszFilename)
 		for (int i = 0; i < 4; i++)
 			mMRUList[i].Empty();
 		InfoLog_Flag = 1;
-		BMPPathString[0] = 0;
+		BMPPathString.Empty();
 		UseMPAExtensions = 0;
 		NotifyWhenDone = 0;
 	}
@@ -4153,7 +4162,7 @@ void LoadSettingsFromFile(LPCTSTR pszFilename)
 		line[_tcslen(line) - 1] = 0;
 		p = line;
 		while (*p++ != _T('='));
-		_tcscpy(AVSTemplatePath, p);
+		AVSTemplatePath = p;
 		fscanf(INIFile, "Full_Path_In_Files=%d\n", &FullPathInFiles);
 		fscanf(INIFile, "Fusion_Audio=%d\n", &FusionAudio);
 		fscanf(INIFile, "Loop_Playback=%d\n", &LoopPlayback);
@@ -4171,7 +4180,7 @@ void LoadSettingsFromFile(LPCTSTR pszFilename)
 		line[_tcslen(line) - 1] = 0;
 		p = line;
 		while (*p++ != _T('='));
-		_tcscpy(BMPPathString, p);
+		BMPPathString = p;
 		fscanf(INIFile, "Use_MPA_Extensions=%d\n", &UseMPAExtensions);
 		fscanf(INIFile, "Notify_When_Done=%d\n", &NotifyWhenDone);
 		fclose(INIFile);
