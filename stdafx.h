@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <commdlg.h>
 #include <shellapi.h>
+#include <shlwapi.h>
 
 // C RunTime Header Files
 #include <assert.h>
@@ -29,6 +30,7 @@
 // ATL headers
 #include <atlbase.h>
 #include <atlstr.h>
+#include <atlpath.h>
 
 
 // TODO: reference additional headers your program requires here
