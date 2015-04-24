@@ -337,11 +337,11 @@ void sequence_header()
         }
 		if (crop1088_warned == false)
 		{
-			char buf[255];
-			sprintf(buf, "Your stream specifies a display height of 1088.\n"
-				"This is sometimes an encoding mistake and the last 8 lines are garbage.\n"
-				"Do you want to treat it as if it specified a height of 1080?");
-			if (MessageBox(hWnd, buf, "Display Height 1088 Warning", MB_YESNO | MB_ICONINFORMATION) == IDYES)
+			TCHAR buf[255];
+			_stprintf_s(buf, _T("Your stream specifies a display height of 1088.\n")
+				_T("This is sometimes an encoding mistake and the last 8 lines are garbage.\n")
+				_T("Do you want to treat it as if it specified a height of 1080?"));
+			if (MessageBox(hWnd, buf, _T("Display Height 1088 Warning"), MB_YESNO | MB_ICONINFORMATION) == IDYES)
 				crop1088 = true;
 			else
 				crop1088 = false;

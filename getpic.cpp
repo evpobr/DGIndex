@@ -175,31 +175,31 @@ void WriteD2VLine(int finish)
 
 void SetFaultFlag(int val)
 {
-	char fault[80];
+	TCHAR fault[80];
 
 	Fault_Flag = val;
 	switch (val)
 	{
 	case 1:
-		sprintf(fault, "block error");
+		_stprintf_s(fault, _T("block error"));
 		break;
 	case 2:
-		sprintf(fault, "mb type error");
+		_stprintf_s(fault, _T("mb type error"));
 		break;
 	case 3:
-		sprintf(fault, "cbp error");
+		_stprintf_s(fault, _T("cbp error"));
 		break;
 	case 4:
-		sprintf(fault, "null slice");
+		_stprintf_s(fault, _T("null slice"));
 		break;
 	case 5:
-		sprintf(fault, "mb addr inc error");
+		_stprintf_s(fault, _T("mb addr inc error"));
 		break;
 	case 6:
-		sprintf(fault, "motion code error");
+		_stprintf_s(fault, _T("motion code error"));
 		break;
 	default:
-		sprintf(fault, "video error");
+		_stprintf_s(fault, _T("video error"));
 		break;
 	}
 	SetDlgItemText(hDlg, IDC_INFO, fault);
@@ -244,7 +244,7 @@ __try
 			gop_entries_ndx++;
 		else
 		{
-			MessageBox(hWnd, "Too many pictures per GOP (>= 500).\nDGIndex will terminate.", NULL, MB_OK | MB_ICONERROR);
+			MessageBox(hWnd, _T("Too many pictures per GOP (>= 500).\nDGIndex will terminate."), NULL, MB_OK | MB_ICONERROR);
 			exit(1);
 		}
 	}
@@ -268,7 +268,7 @@ __try
 						break;
 
 					default:
-						SetDlgItemText(hDlg, IDC_INFO, "picture error");
+						SetDlgItemText(hDlg, IDC_INFO, _T("picture error"));
 						break;
 				}
 		}
@@ -314,7 +314,7 @@ __try
 }
 __except (EXCEPTION_EXECUTE_HANDLER)
 {
-	if (MessageBox(hWnd, "Caught an exception during decoding! Continue?", "Exception!", MB_YESNO | MB_ICONERROR) == IDYES)
+	if (MessageBox(hWnd, _T("Caught an exception during decoding! Continue?"), _T("Exception!"), MB_YESNO | MB_ICONERROR) == IDYES)
 		return;
 	else
 		ThreadKill(MISC_KILL);

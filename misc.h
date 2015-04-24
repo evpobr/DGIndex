@@ -21,6 +21,10 @@
  *
  */
 
+#pragma once
+
+#include <atlstr.h>
+
 #define ui64 unsigned __int64
 
 struct ts_t
@@ -44,7 +48,7 @@ typedef struct ts_t ts;
 
 ui64 read_counter(void);
 ui64 get_freq(void);
-int dprintf(char* fmt, ...);
+int dprintf(LPTSTR fmt, ...);
 
 void init_first(ts* timers);
 void init_timers(ts* timers);
@@ -54,3 +58,14 @@ void start_timer2(ui64* timer);
 void stop_timer(ui64* timer);
 void stop_timer2(ui64* timer);
 void timer_debug(ts* tim);
+
+// Path routines
+
+CString FindExtension(const CString& strPath);
+void RemoveExtension(CString &strPath);
+void RenameExtension(CString &strPath, const CString &strExtension);
+void RemoveFileSpec(CString &strPath);
+void StripPath(CString &strPath);
+void AddBackslash(CString &strPath);
+void GetCurrentDirectory(CString &strBuffer);
+

@@ -40,10 +40,25 @@
 */
 
 int
-strverscmp(const char *s1, const char *s2)
+strverscmp(const TCHAR *s1, const TCHAR *s2)
 {
+	int result = 0;
+
+#ifdef UNICODE
+	size_t ns1 = wcslen(s1) + 1;
+	size_t ns2 = wcslen(s2) + 1;
+	LPSTR s1a = new CHAR[ns1];
+	LPSTR s2a = new CHAR[ns2];
+
+	WideCharToMultiByte(CP_ACP, 0, s1, ns1, s1a, ns1, NULL, NULL);
+	WideCharToMultiByte(CP_ACP, 0, s2, ns2, s2a, ns2, NULL, NULL);
+
+	const unsigned char *p1 = (const unsigned char *) s1a;
+	const unsigned char *p2 = (const unsigned char *) s2a;
+#else
   const unsigned char *p1 = (const unsigned char *) s1;
   const unsigned char *p2 = (const unsigned char *) s2;
+#endif
   unsigned char c1, c2;
   int state;
   int diff;
@@ -74,37 +89,47 @@ strverscmp(const char *s1, const char *s2)
                  -1,  CMP, CMP, CMP
   };
 
-  if (p1 == p2)
-    return 0;
-
-  c1 = *p1++;
-  c2 = *p2++;
-  /* Hint: '0' is a digit too.  */
-  state = S_N | ((c1 == '0') + (isdigit (c1) != 0));
-
-  while ((diff = c1 - c2) == 0 && c1 != '\0')
-    {
-      state = next_state[state];
-      c1 = *p1++;
-      c2 = *p2++;
-      state |= (c1 == '0') + (isdigit (c1) != 0);
-    }
-
-  state = result_type[state << 2 | (((c2 == '0') + (isdigit (c2) != 0)))];
-
-  switch (state)
+  if (p1 != p2)
   {
-    case CMP:
-      return diff;
+	  c1 = *p1++;
+	  c2 = *p2++;
+	  /* Hint: '0' is a digit too.  */
+	  state = S_N | ((c1 == '0') + (isdigit(c1) != 0));
 
-    case LEN:
-      while (isdigit (*p1++))
-	if (!isdigit (*p2++))
-	  return 1;
+	  while ((diff = c1 - c2) == 0 && c1 != '\0')
+	  {
+		  state = next_state[state];
+		  c1 = *p1++;
+		  c2 = *p2++;
+		  state |= (c1 == '0') + (isdigit(c1) != 0);
+	  }
 
-      return isdigit (*p2) ? -1 : diff;
+	  state = result_type[state << 2 | (((c2 == '0') + (isdigit(c2) != 0)))];
 
-    default:
-      return state;
+	  switch (state)
+	  {
+	  case CMP:
+		  result = diff;
+
+	  case LEN:
+		  while (isdigit(*p1++))
+			  if (!isdigit(*p2++))
+			  {
+				  result = 1;
+				  break;
+			  }
+
+		  result = isdigit(*p2) ? -1 : diff;
+
+	  default:
+		  result = state;
+	  }
   }
+
+#ifdef UNICODE
+  delete s1a;
+  delete s2a;
+#endif
+
+  return result;
 }

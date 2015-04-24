@@ -6,35 +6,36 @@
 #include <string.h>
 #include "global.h"
 
-int parse_d2v(HWND hWnd, char *szInput)
+int parse_d2v(HWND hWnd, LPTSTR szInput)
 {
 	FILE *fp, *wfp;
-	char line[2048], *p;
+	CHAR line[2048], *p;
 	int i, fill, val, prev_val = -1, ndx = 0, count = 0, fdom = -1;
 	int D2Vformat = 0;
 	int vob, cell;
 	unsigned int gop_field, field_operation, frame_rate, hour, min;
 	double sec;
-	char render[128], temp[20];
+	CHAR render[128], temp[20];
 	int type;
+	LPTSTR ext;
 	
 	// Open the D2V file to be parsed.
-	fp = fopen(szInput, "r");
+	fp = _tfopen(szInput, _T("r"));
 	if (fp == 0)
 	{
-		MessageBox(hWnd, "Cannot open the D2V file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("Cannot open the D2V file!"), NULL, MB_OK | MB_ICONERROR);
 		return 0;
 	}
 	// Mutate the file name to the output text file to receive the parsed data.
-	p = &szInput[strlen(szInput)];
-	while (*p != '.') p--;
-	p[1] = 0;
-	strcat(p, "parse.txt");
+	ext = &szInput[_tcslen(szInput)];
+	while (*ext != _T('.')) ext--;
+	ext[1] = 0;
+	_tcscat(ext, _T("parse.txt"));
 	// Open the output file.
-	wfp = fopen(szInput, "w");
+	wfp = _tfopen(szInput, _T("w"));
 	if (wfp == 0)
 	{
-		MessageBox(hWnd, "Cannot create the parse output file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("Cannot create the parse output file!"), NULL, MB_OK | MB_ICONERROR);
 		return 0;
 	}
 
@@ -43,7 +44,7 @@ int parse_d2v(HWND hWnd, char *szInput)
 	fgets(line, 2048, fp);
 	if (strncmp(line, "DGIndexProjectFile", 18) != 0)
 	{
-		MessageBox(hWnd, "The file is not a DGIndex project file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("The file is not a DGIndex project file!"), NULL, MB_OK | MB_ICONERROR);
 		fclose(fp);
 		fclose(wfp);
 		return 0;
@@ -51,7 +52,7 @@ int parse_d2v(HWND hWnd, char *szInput)
 	sscanf(line, "DGIndexProjectFile%d", &D2Vformat);
 	if (D2Vformat != D2V_FILE_VERSION)
 	{
-		MessageBox(hWnd, "Obsolete D2V file.\nRecreate it with this version of DGIndex.", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("Obsolete D2V file.\nRecreate it with this version of DGIndex."), NULL, MB_OK | MB_ICONERROR);
 		fclose(fp);
 		fclose(wfp);
 		return 0;
@@ -212,43 +213,45 @@ int parse_d2v(HWND hWnd, char *szInput)
 	return 1;
 }
 
-int analyze_sync(HWND hWnd, char *Input, int audio_id)
+int analyze_sync(HWND hWnd, LPTSTR Input, int audio_id)
 {
 	FILE *fp, *wfp;
-	char line[2048], *p;
+	CHAR line[2048], *p;
 	__int64 vpts, apts;
 	int delay, ref;
 	double rate, picture_period;
     int leadingBframes;
-	char audio_id_str[10], tmp[20];
+	char audio_id_str[10];
+	TCHAR tmp[20];
+	LPTSTR ext;
 
     sprintf(audio_id_str, " A%02x", audio_id);
-	fp = fopen(Input, "r");
+	fp = _tfopen(Input, _T("r"));
 	if (fp == 0)
 	{
-		MessageBox(hWnd, "Cannot open the dump file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("Cannot open the dump file!"), NULL, MB_OK | MB_ICONERROR);
 		return 0;
 	}
 	// Check that it is a timestamps dump file
 	fgets(line, 1024, fp);
 	if (strncmp(line, "DGIndex Timestamps Dump", 23) != 0)
 	{
-		MessageBox(hWnd, "The file is not a DGIndex timestamps dump file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("The file is not a DGIndex timestamps dump file!"), NULL, MB_OK | MB_ICONERROR);
 		fclose(fp);
 		return 0;
 	}
 
 	// Mutate the file name to the output text file to receive the parsed data.
-	p = &szInput[strlen(Input)];
-	while (*p != '.') p--;
-	p[1] = 0;
-	sprintf(tmp, "delayT%x.txt", audio_id);
-	strcat(p, tmp);
+	ext = &szInput[_tcslen(Input)];
+	while (*ext != _T('.')) ext--;
+	ext[1] = 0;
+	_stprintf_s(tmp, _T("delayT%x.txt"), audio_id);
+	_tcscat(ext, tmp);
 	// Open the output file.
-	wfp = fopen(szInput, "w");
+	wfp = _tfopen(szInput, _T("w"));
 	if (wfp == 0)
 	{
-		MessageBox(hWnd, "Cannot create the output file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("Cannot create the output file!"), NULL, MB_OK | MB_ICONERROR);
 		return 0;
 	}
 	fprintf(wfp, "Delay Analysis Output (Audio ID %x)\n\n", audio_id);
@@ -306,62 +309,64 @@ next_vpts:
 }
 
 // Return 1 if a transition was detected in test_only mode and the user wants to correct it, otherwise 0.	
-int fix_d2v(HWND hWnd, char *Input, int test_only)
+int fix_d2v(HWND hWnd, LPTSTR Input, int test_only)
 {
 	FILE *fp, *wfp, *dfp;
-	char line[2048], prev_line[2048], wfile[2048], logfile[2048], *p, *q;
+	CHAR line[2048], prev_line[2048], *p, *q;
+	LPTSTR ext;
+	TCHAR wfile[2048], logfile[2048];
 	int val, mval, prev_val, mprev_val, fix;
 	bool first, found;
 	int D2Vformat = 0;
     unsigned int info;
 
-	fp = fopen(Input, "r");
+	fp = _tfopen(Input, _T("r"));
 	if (fp == 0)
 	{
-		MessageBox(hWnd, "Cannot open the D2V file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("Cannot open the D2V file!"), NULL, MB_OK | MB_ICONERROR);
 		return 0;
 	}
 	// Pick up the D2V format number
 	fgets(line, 1024, fp);
 	if (strncmp(line, "DGIndexProjectFile", 18) != 0)
 	{
-		MessageBox(hWnd, "The file is not a DGIndex project file!", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("The file is not a DGIndex project file!"), NULL, MB_OK | MB_ICONERROR);
 		fclose(fp);
 		return 0;
 	}
 	sscanf(line, "DGIndexProjectFile%d", &D2Vformat);
 	if (D2Vformat != D2V_FILE_VERSION)
 	{
-		MessageBox(hWnd, "Obsolete D2V file.\nRecreate it with this version of DGIndex.", NULL, MB_OK | MB_ICONERROR);
+		MessageBox(hWnd, _T("Obsolete D2V file.\nRecreate it with this version of DGIndex."), NULL, MB_OK | MB_ICONERROR);
 		fclose(fp);
 		return 0;
 	}
 
 	if (!test_only)
 	{
-		strcpy(wfile, Input);
-		strcat(wfile,".fixed");
-		wfp = fopen(wfile, "w");
+		_tcscpy(wfile, Input);
+		_tcscat(wfile,_T(".fixed"));
+		wfp = _tfopen(wfile, _T("w"));
 		if (wfp == 0)
 		{
-			MessageBox(hWnd, "Cannot create the fixed D2V file!", NULL, MB_OK | MB_ICONERROR);
+			MessageBox(hWnd, _T("Cannot create the fixed D2V file!"), NULL, MB_OK | MB_ICONERROR);
 			fclose(fp);
 			return 0;
 		}
 		fputs(line, wfp);
 		// Mutate the file name to the output text file to receive processing status information.
-		strcpy(logfile, Input);
-		p = &logfile[strlen(logfile)];
-		while (*p != '.') p--;
-		p[1] = 0;
-		strcat(p, "fix.txt");
+		_tcscpy(logfile, Input);
+		ext = &logfile[_tcslen(logfile)];
+		while (*ext != _T('.')) ext--;
+		ext[1] = 0;
+		_tcscat(ext, _T("fix.txt"));
 		// Open the output file.
-		dfp = fopen(logfile, "w");
+		dfp = _tfopen(logfile, _T("w"));
 		if (dfp == 0)
 		{
 			fclose(fp);
 			fclose(wfp);
-			MessageBox(hWnd, "Cannot create the info output file!", NULL, MB_OK | MB_ICONERROR);
+			MessageBox(hWnd, _T("Cannot create the info output file!"), NULL, MB_OK | MB_ICONERROR);
 			return 0;
 		}
 
@@ -457,13 +462,13 @@ int fix_d2v(HWND hWnd, char *Input, int test_only)
         {
 		    if (!CLIActive)
 		    {
-			    if (MessageBox(hWnd, "A field order transition was detected.\n"
-                    "It is not possible to decide automatically if this should be corrected.\n"
-                    "Refer to the DGIndex Users Manual for an explanation.\n"
-                    "You can choose to correct it by hitting the Yes button below or\n"
-                    "you can correct it later using the Fix D2V tool.\n\n"
-                    "Correct the field order transition?",
-                    "Field Order Transition Detected", MB_YESNO | MB_ICONWARNING) == IDYES)
+				if (MessageBox(hWnd, _T("A field order transition was detected.\n")
+					_T("It is not possible to decide automatically if this should be corrected.\n")
+					_T("Refer to the DGIndex Users Manual for an explanation.\n")
+					_T("You can choose to correct it by hitting the Yes button below or\n")
+					_T("you can correct it later using the Fix D2V tool.\n\n")
+					_T("Correct the field order transition?"),
+					_T("Field Order Transition Detected"), MB_YESNO | MB_ICONWARNING) == IDYES)
                     return 1;
                 else
                     return 0;
@@ -477,22 +482,23 @@ int fix_d2v(HWND hWnd, char *Input, int test_only)
 	{
 		fprintf(dfp, "No errors found.\n");
 		fclose(dfp);
-		_unlink(wfile);
-		MessageBox(hWnd, "No errors found.", "Fix D2V", MB_OK | MB_ICONINFORMATION);
+		_tunlink(wfile);
+		MessageBox(hWnd, _T("No errors found."), _T("Fix D2V"), MB_OK | MB_ICONINFORMATION);
 		return 0;
 	}
 	else
 	{
 		FILE *bad, *good, *fixed;
 		char c;
+		TCHAR szPath[DG_MAX_PATH];
 
 		fclose(dfp);
 		// Copy the D2V file to *.d2v.bad version.
-		good = fopen(Input, "r");
+		good = _tfopen(Input, _T("r"));
 		if (good == 0)
 			return 0;
-		sprintf(line, "%s.bad", Input);
-		bad = fopen(line, "w");
+		_stprintf_s(szPath, _T("%s.bad"), Input);
+		bad = _tfopen(szPath, _T("w"));
 		if (bad == 0)
 		{
 			fclose(good);
@@ -502,20 +508,20 @@ int fix_d2v(HWND hWnd, char *Input, int test_only)
 		fclose(good);
 		fclose(bad);
 		// Copy the *.d2v.fixed version to the D2V file.
-		good = fopen(Input, "w");
+		good = _tfopen(Input, _T("w"));
 		if (good == 0)
 			return 0;
-		sprintf(line, "%s.fixed", Input);
-		fixed = fopen(line, "r");
+		_stprintf_s(szPath, _T("%s.fixed"), Input);
+		fixed = _tfopen(szPath, _T("r"));
 		while ((c = fgetc(fixed)) != EOF) fputc(c, good);
 		fclose(good);
 		fclose(fixed);
 		// Ditch the *.d2v.fixed version.
-		_unlink(line);
+		_tunlink(szPath);
 		if (!CLIActive)
 		{
-			MessageBox(hWnd, "Field order corrected. The original version was\nsaved with the extension \".bad\".", "Correct Field Order", MB_OK | MB_ICONINFORMATION);
-			ShellExecute(hDlg, "open", logfile, NULL, NULL, SW_SHOWNORMAL);
+			MessageBox(hWnd, _T("Field order corrected. The original version was\nsaved with the extension \".bad\"."), _T("Correct Field Order"), MB_OK | MB_ICONINFORMATION);
+			ShellExecute(hDlg, _T("open"), logfile, NULL, NULL, SW_SHOWNORMAL);
 		}
 	}
 

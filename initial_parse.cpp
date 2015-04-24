@@ -29,7 +29,7 @@
 #define NEED_1        2
 
 static void determine_stream_type(void);
-static void video_parser(int *);
+static void video_parser(int &);
 static void pack_parser(void);
 static unsigned char get_byte(void);
 
@@ -40,10 +40,10 @@ static unsigned char buffer[256000];
 static int buffer_length, buffer_ndx;
 static int EOF_reached;
 
-int initial_parse(char *input_file, int *mpeg_type_p, int *is_program_stream_p)
+int initial_parse(LPCTSTR input_file, int &mpeg_type_p, int &is_program_stream_p)
 {
 	// Open the input file.
-	if (input_file[0] == 0 || (file = _open(input_file, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL)) == -1)
+	if (input_file[0] == 0 || (file = _topen(input_file, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL)) == -1)
 	{
 		return -1;
 	}
@@ -53,7 +53,7 @@ int initial_parse(char *input_file, int *mpeg_type_p, int *is_program_stream_p)
 
 	// Re-open the input file.
 	_close(file);
-	file = _open(input_file, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL);
+	file = _topen(input_file, _O_RDONLY | _O_BINARY | _O_SEQUENTIAL);
 	if (file == -1)
 	{
 		return -1;
@@ -67,7 +67,7 @@ int initial_parse(char *input_file, int *mpeg_type_p, int *is_program_stream_p)
 	{
 		return -1;
 	}
-	*is_program_stream_p = program_stream_type;
+	is_program_stream_p = program_stream_type;
 	return 0;
 }
 
@@ -102,7 +102,7 @@ static unsigned char get_byte(void)
 	}
 }
 
-static void video_parser(int *mpeg_type_p)
+static void video_parser(int &mpeg_type_p)
 {
 	unsigned char val;
 	int sequence_header_active = 0;
@@ -114,7 +114,7 @@ static void video_parser(int *mpeg_type_p)
 	found = 0;
 
 	// Let's go! Start by assuming it's not MPEG at all.
-	*mpeg_type_p = IS_NOT_MPEG;
+	mpeg_type_p = IS_NOT_MPEG;
 	for (;;)
 	{
 		// Parse for start codes.
@@ -152,7 +152,7 @@ static void video_parser(int *mpeg_type_p)
 			if (val == 0xB3)
 			{
 				// Found a sequence header, so it's at least MPEG1.
-				*mpeg_type_p = IS_MPEG1;
+				mpeg_type_p = IS_MPEG1;
 				// Sequence header.
 				if (sequence_header_active)
 				{
@@ -172,14 +172,14 @@ static void video_parser(int *mpeg_type_p)
 					if (sequence_header_active)
 					{
 						// Must be MPEG2.
-						*mpeg_type_p = IS_MPEG2;
+						mpeg_type_p = IS_MPEG2;
 						return;
 					}
 				}
 				else if (sequence_header_active)
 				{
 					// Got some other extension. Must be MPEG1.
-					*mpeg_type_p = IS_MPEG1;
+					mpeg_type_p = IS_MPEG1;
 					return;
 				}
 			}
@@ -188,7 +188,7 @@ static void video_parser(int *mpeg_type_p)
 				if (sequence_header_active)
 				{
 					// No sequence header extension. Must be MPEG1.
-					*mpeg_type_p = IS_MPEG1;
+					mpeg_type_p = IS_MPEG1;
 					return;
 				}
 			}

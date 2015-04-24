@@ -50,6 +50,13 @@
 
 XTN bool bIsWindowsXPorLater;
 
+#define MAIN_FRAME_STYLE	WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX)
+#define TRACK_HEIGHT	32
+#define INIT_WIDTH		480
+#define INIT_HEIGHT		270
+#define MIN_WIDTH		160
+#define MIN_HEIGHT		32
+
 // Messages to the window procedure.
 #define CLI_RIP_MESSAGE				(WM_APP)
 #define D2V_DONE_MESSAGE			(WM_APP + 1)
@@ -212,7 +219,7 @@ XTN __int64 gop_positions[MAX_GOPS];
 XTN int gop_positions_ndx;
 
 typedef struct {
-	char					filename[DG_MAX_PATH];
+	TCHAR					filename[DG_MAX_PATH];
 	FILE					*file;
     bool                    selected_for_demux;
 	bool					rip;
@@ -274,7 +281,7 @@ XTN bool AudioOnly_Flag;
 XTN unsigned int AudioPktCount;
 XTN bool Display_Flag;
 XTN int Fault_Flag;
-XTN int CurrentFile;
+XTN size_t CurrentFile;
 XTN int NumLoadedFiles;
 XTN int FO_Flag;
 XTN int iDCT_Flag;
@@ -294,8 +301,8 @@ XTN __int64 PackHeaderPosition;
 
 XTN int LeadingBFrames;
 XTN int ForceOpenGops;
-XTN char AVSTemplatePath[DG_MAX_PATH];
-XTN char BMPPathString[DG_MAX_PATH];
+XTN CString AVSTemplatePath;
+XTN CString BMPPathString;
 XTN int FullPathInFiles;
 XTN int LoopPlayback;
 XTN int FusionAudio;
@@ -307,8 +314,8 @@ XTN bool Cropping_Flag;
 XTN int Clip_Width, Clip_Height; 
 
 XTN int Method_Flag;
-XTN char Track_List[255];
-XTN char Delay_Track[255];
+XTN TCHAR Track_List[255];
+XTN TCHAR Delay_Track[255];
 XTN int DRC_Flag;
 XTN bool DSDown_Flag;
 XTN bool Decision_Flag;
@@ -325,10 +332,10 @@ XTN HDC hDC;
 XTN int CLIActive;
 XTN char CLIPreview;
 XTN char ExitOnEnd;
-XTN char ExePath[DG_MAX_PATH];
+XTN CString ExePath;
 XTN FILE *D2VFile;
-XTN char D2VFilePath[DG_MAX_PATH];
-XTN char AudioFilePath[DG_MAX_PATH];
+XTN TCHAR D2VFilePath[DG_MAX_PATH];
+XTN TCHAR AudioFilePath[DG_MAX_PATH];
 XTN unsigned int LowestAudioId;
 XTN int VOB_ID, CELL_ID;
 XTN FILE *MuxFile;
@@ -336,10 +343,13 @@ XTN int HadAddDialog;
 XTN int hadRGoption;
 #define D2V_FILE_VERSION 16
 
+void ClientResize(HWND hWnd, int nWidth, int nHeight);
+
 XTN int WindowMode;
 XTN HWND hWnd, hDlg, hTrack;
 XTN HWND hwndSelect;
-XTN char szInput[MAX_FILE_NUMBER*DG_MAX_PATH], szOutput[DG_MAX_PATH], szBuffer[DG_MAX_PATH], szSave[DG_MAX_PATH];
+XTN TCHAR szInput[MAX_FILE_NUMBER*DG_MAX_PATH];
+XTN CString strOutput, strSave;
 
 XTN unsigned char *backward_reference_frame[3], *forward_reference_frame[3];
 XTN unsigned char *auxframe[3], *current_frame[3];
@@ -380,7 +390,7 @@ XTN double max_rate;
 XTN int Clip_Left, Clip_Right, Clip_Top, Clip_Bottom;
 
 XTN int Infile[MAX_FILE_NUMBER];
-XTN char *Infilename[MAX_FILE_NUMBER];
+XTN CAtlArray<CString> Infilename;
 XTN __int64 Infilelength[MAX_FILE_NUMBER];
 XTN __int64	Infiletotal;
 
@@ -436,7 +446,7 @@ XTN int top_field_first;
 XTN int repeat_first_field;
 XTN int intra_vlc_format;
 
-XTN int strverscmp(const char *s1, const char *s2);
+XTN int strverscmp(const TCHAR *s1, const TCHAR *s2);
 
 /* getbit.c */
 XTN void UpdateInfo(void);
@@ -454,13 +464,12 @@ XTN void WriteD2VLine(int);
 /* gui.cpp */
 XTN void UpdateWindowText();
 XTN void UpdateMRUList(void);
-XTN void AddMRUList(char *);
+XTN void AddMRUList(LPCTSTR);
 XTN void DeleteMRUList(int);
-XTN char mMRUList[4][DG_MAX_PATH];
+XTN CString mMRUList[4];
 #define MISC_KILL 0
 #define END_OF_DATA_KILL 1
 XTN void ThreadKill(int);
-XTN void ResizeWindow(int width, int height);
 XTN bool crop1088_warned, crop1088;
 XTN int LogQuants_Flag;
 XTN FILE *Quants;
@@ -473,7 +482,7 @@ XTN int InfoLog_Flag;
 XTN void Recovery(void);
 XTN void RefreshWindow(bool);
 XTN void CheckFlag(void);
-XTN int parse_cli(LPSTR lpCmdLine, LPSTR ucCmdLine);
+XTN int parse_cli(LPTSTR lpCmdLine, LPTSTR ucCmdLine);
 
 /* idct */
 
@@ -499,7 +508,7 @@ XTN void Dual_Prime_Arithmetic(int DMV[][2], int *dmvector, int mvx, int mvy);
 
 /* mpeg2dec.c */
 XTN DWORD WINAPI MPEG2Dec(LPVOID n);
-XTN int initial_parse(char *input_file, int *mpeg_type_p, int *is_pgrogram_stream_p);
+XTN int initial_parse(LPCTSTR input_file, int &mpeg_type_p, int &is_pgrogram_stream_p);
 XTN void setRGBValues();
 #define IS_NOT_MPEG 0
 #define IS_MPEG1 1
@@ -508,7 +517,7 @@ XTN int mpeg_type;
 XTN int is_program_stream;
 
 /* norm.c */
-XTN void Normalize(FILE *WaveIn, int WaveInPos, char *filename, FILE *WaveOut, int WaveOutPos, int size);
+XTN void Normalize(FILE *WaveIn, int WaveInPos, LPCTSTR filename, FILE *WaveOut, int WaveOutPos, int size);
 
 /* store.c */
 XTN void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame);
@@ -524,13 +533,14 @@ XTN void CloseWAV(FILE *file, int size);
 XTN void DownWAV(FILE *file);
 XTN bool CheckWAV(void);
 
-static char *AspectRatio[] = {
-	"", "1:1", "4:3", "16:9", "2.21:1"
+static TCHAR *AspectRatio[] = {
+	_T(""), _T("1:1"), _T("4:3"), _T("16:9"), _T("2.21:1")
 };
 
-static char *AspectRatioMPEG1[] = {
-	"", "1:1", "0.6735", "16:9,625", "0.7615", "0.8055", "16:9,525", "0.8935", "4:3,625", "0.9815", "1.0255",
-	"1.0695", "4:3,525", "1.575", "1.2015"
+static TCHAR *AspectRatioMPEG1[] = {
+	_T(""), _T("1:1"), _T("0.6735"), _T("16:9,625"), _T("0.7615"), _T("0.8055"), _T("16:9,525"), _T("0.8935"),
+	_T("4:3,625"), _T("0.9815"), _T("1.0255"),
+	_T("1.0695"), _T("4:3,525"), _T("1.575"), _T("1.2015")
 };
 
 XTN int TransportPacketSize;

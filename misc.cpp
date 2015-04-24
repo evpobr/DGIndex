@@ -24,7 +24,7 @@
 #include "global.h"
 
 static ui64 local;
-static char buffer[256];
+static TCHAR buffer[256];
 
 unsigned __int64 read_counter(void)
 {
@@ -104,7 +104,7 @@ void timer_debug(ts* timers) {
 	//tim.freq = ;
 //	sprintf(buffer,"conv = %I64d ",tim.conv);
 //	sprintf(buffer,"idct = %I64d overall=%I64d idct% = %f",tim.idct,tim.overall,(double)tim.idct*100/tim.overall);
-	sprintf(buffer,"| dec%% = %f > mcmp%% = %f addb%% = %f idct%% = %f decMB%% = %f bit%% = %f | conv%% = %f | post%% = %f | mcpy%% = %f | msec = %f fps = %f mean = %f",
+	_stprintf_s(buffer, _T("| dec%% = %f > mcmp%% = %f addb%% = %f idct%% = %f decMB%% = %f bit%% = %f | conv%% = %f | post%% = %f | mcpy%% = %f | msec = %f fps = %f mean = %f"),
 		(double)tim.dec*100/tim.overall,
 		(double)tim.idct*100/tim.overall,
 		(double)tim.addb*100/tim.overall,
@@ -121,14 +121,96 @@ void timer_debug(ts* timers) {
 	OutputDebugString(buffer);
 }
 
-int dprintf(char* fmt, ...)
+int dprintf(LPTSTR fmt, ...)
 {
-	char printString[1000];
+	TCHAR printString[1000];
 	va_list argp;
 	va_start(argp, fmt);
-	vsprintf(printString, fmt, argp);
+	_vstprintf_s(printString, fmt, argp);
 	va_end(argp);
     OutputDebugString(printString);
-	return strlen(printString);
+	return _tcslen(printString);
 }
 
+CString FindExtension(const CString& strPath)
+{
+	CString strResult;
+
+	int nPos = 0;
+	nPos = strPath.ReverseFind(_T('.'));
+	if (nPos != -1)
+	{
+		int nLength = strPath.GetLength();
+		strResult = strPath.Right(nLength - nPos);
+	}
+
+	return strResult;
+}
+
+void RemoveExtension(CString &strPath)
+{
+	RenameExtension(strPath, _T(""));
+}
+
+// Removes extension from path.
+void RenameExtension(CString &strPath, const CString &strExtension)
+{
+	int nIndex = strPath.ReverseFind(_T('.'));
+	if (nIndex != -1)
+	{
+		strPath.Truncate(nIndex);
+		if (!strExtension.IsEmpty())
+		{
+			if (strExtension[0] == _T('.'))
+				strPath.Append(strExtension);
+			else
+			{
+				strPath += _T(".");
+				strPath += strExtension;
+			}
+		}
+	}
+}
+
+// Removes trailing filename and backslash: c:\dir\filename.ext -> c:\dir
+void RemoveFileSpec(CString &strPath)
+{
+	int nIndex = strPath.ReverseFind(_T('\\'));
+	if (nIndex != -1)
+	{
+		strPath.Truncate(nIndex);
+	}
+}
+
+// Removes the path portion of a fully qualified path and file
+void StripPath(CString &strPath)
+{
+	int nIndex = strPath.ReverseFind(_T('\\'));
+	if (nIndex != -1)
+	{
+		int nLength = strPath.GetLength();
+		// one symbol - backslash, do nothing
+		if (nLength != 1)
+			// directory with backslash
+			if (nIndex == nLength - 1)
+				strPath.Truncate(nIndex);
+		// directory with filename
+		else
+			strPath = strPath.Right(nLength - nIndex - 1);
+	}
+}
+
+void AddBackslash(CString &strPath)
+{
+	if (!strPath.IsEmpty())
+		if (strPath.Right(1) != _T('\\'))
+			strPath.Append(_T("\\"));
+}
+
+void GetCurrentDirectory(CString &strBuffer)
+{
+	DWORD dwLength = GetCurrentDirectory(0, NULL);
+	GetCurrentDirectory(dwLength, strBuffer.GetBufferSetLength(dwLength - 1));
+	strBuffer.ReleaseBuffer();
+	
+}

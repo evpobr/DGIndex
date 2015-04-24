@@ -38,8 +38,8 @@ static unsigned char *y444;
 static long frame_size;
 static bool TFF, RFF, TFB, BFB, frame_type;
 
-static char *FrameType[] = {
-	"Interlaced", "Progressive"
+static TCHAR *FrameType[] = {
+	_T("Interlaced"), _T("Progressive")
 };
 
 void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame)
@@ -97,13 +97,14 @@ void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame)
 
         if ((HDDisplay != HD_DISPLAY_FULL_SIZED) && (Clip_Width > MAX_WINDOW_WIDTH || Clip_Height > MAX_WINDOW_HEIGHT))
 		{
-			ResizeWindow(Clip_Width/2, Clip_Height/2);
-			ResizeWindow(Clip_Width/2, Clip_Height/2);
+			ClientResize(hWnd, Clip_Width / 2, Clip_Height / 2 + TRACK_HEIGHT / 3 + TRACK_HEIGHT);
 		}
 		else
 		{
-			ResizeWindow(Clip_Width, Clip_Height);
-			ResizeWindow(Clip_Width, Clip_Height);
+			ClientResize(hWnd, Clip_Width, Clip_Height + TRACK_HEIGHT / 3 + TRACK_HEIGHT);
+			RECT rc = { 0 };
+			rc.right = Clip_Width;
+			rc.bottom = Clip_Height;
 		}
 
 		ZeroMemory(&birgb, sizeof(BITMAPINFOHEADER));
@@ -127,78 +128,80 @@ void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame)
         if (d2v.picture_structure == FRAME_PICTURE)
         {
 		    if (TFF)
-			    SetDlgItemText(hDlg, IDC_FIELD_ORDER, "Top");
+				SetDlgItemText(hDlg, IDC_FIELD_ORDER, _T("Top"));
 		    else
-			    SetDlgItemText(hDlg, IDC_FIELD_ORDER, "Bottom");
+				SetDlgItemText(hDlg, IDC_FIELD_ORDER, _T("Bottom"));
         }
         else
         {
-            SetDlgItemText(hDlg, IDC_FIELD_ORDER, d2v.picture_structure == TOP_FIELD ? "Top" : "Bottom");
+			SetDlgItemText(hDlg, IDC_FIELD_ORDER, d2v.picture_structure == TOP_FIELD ? _T("Top") : _T("Bottom"));
         }
 	}
 
 	if (Info_Flag && process.locate==LOCATE_RIP)
 	{
-		sprintf(szBuffer, "%s", FrameType[frame_type]);
-		SetDlgItemText(hDlg, IDC_FRAME_TYPE, szBuffer);
+		CString strText;
 
-        sprintf(szBuffer, "%s", progressive_sequence ? "Frame only" : "Field/Frame");
-		SetDlgItemText(hDlg, IDC_SEQUENCE, szBuffer);
+		strText.Format(_T("%s"), FrameType[frame_type]);
+		SetDlgItemText(hDlg, IDC_FRAME_TYPE, strText);
+
+		strText.Format(_T("%s"), progressive_sequence ? _T("Frame only") : _T("Field/Frame"));
+		SetDlgItemText(hDlg, IDC_SEQUENCE, strText);
 
         switch (matrix_coefficients)
         {
         case 1:
-		    sprintf(szBuffer, "%s", "BT.709");
+			strText = _T("BT.709");
             break;
         case 2:
-		    sprintf(szBuffer, "%s", "Unknown");
+			strText = _T("Unknown");
             break;
         case 3:
-		    sprintf(szBuffer, "%s", "Reserved");
+			strText = _T("Reserved");
             break;
         case 4:
-		    sprintf(szBuffer, "%s", "BT.470-2 M");
+			strText = _T("BT.470-2 M");
             break;
         case 5:
-		    sprintf(szBuffer, "%s", "BT.470-2 B,G");
+			strText = _T("BT.470-2 B,G");
             break;
         case 6:
-		    sprintf(szBuffer, "%s", "SMPTE 170M");
+			strText = _T("SMPTE 170M");
             break;
         case 7:
-		    sprintf(szBuffer, "%s", "SMPTE 240M");
+			strText = _T("SMPTE 240M");
             break;
         case 0:
         default:
-		    sprintf(szBuffer, "%s", "Reserved");
+			strText = _T("Reserved");
             break;
         }
         if (default_matrix_coefficients == true)
-            strcat(szBuffer, "*");
-		SetDlgItemText(hDlg, IDC_COLORIMETRY, szBuffer);
+			strText += _T("*");
+		SetDlgItemText(hDlg, IDC_COLORIMETRY, strText);
 
-		sprintf(szBuffer, "%s", picture_structure == 3 ? "Frame" : "Field");
-		SetDlgItemText(hDlg, IDC_FRAME_STRUCTURE, szBuffer);
+		strText.Format(_T("%s"), picture_structure == 3 ? _T("Frame") : _T("Field"));
+		SetDlgItemText(hDlg, IDC_FRAME_STRUCTURE, strText);
 
-		sprintf(szBuffer, "%d", frame+1);
-		SetDlgItemText(hDlg, IDC_CODED_NUMBER, szBuffer);
+		strText.Format(_T("%d"), frame + 1);
+		SetDlgItemText(hDlg, IDC_CODED_NUMBER, strText);
 
-		sprintf(szBuffer, "%d", playback+1);
-		SetDlgItemText(hDlg, IDC_PLAYBACK_NUMBER, szBuffer);
+		strText.Format(_T("%d"), playback + 1);
+		SetDlgItemText(hDlg, IDC_PLAYBACK_NUMBER, strText);
 
-		sprintf(szBuffer, "%d", frame_repeats);
-		SetDlgItemText(hDlg, IDC_FRAME_REPEATS, szBuffer);
+		strText.Format(_T("%d"), frame_repeats);
+		SetDlgItemText(hDlg, IDC_FRAME_REPEATS, strText);
 
-		sprintf(szBuffer, "%d", field_repeats);
-		SetDlgItemText(hDlg, IDC_FIELD_REPEATS, szBuffer);
+		strText.Format(_T("%d"), field_repeats);
+		SetDlgItemText(hDlg, IDC_FIELD_REPEATS, strText);
 
         if (playback - Old_Playback >= 30)
 		{
 			double rate, rate_avg;
 			timing.ed = timeGetTime();
 
-			sprintf(szBuffer, "%.2f", 1000.0*(playback-Old_Playback)/(timing.ed-timing.mi+1));
-			SetDlgItemText(hDlg, IDC_FPS, szBuffer);
+			strText.Format(_T("%.2f"), 1000.0*(playback - Old_Playback) / (timing.ed - timing.mi + 1));
+			SetDlgItemText(hDlg, IDC_FPS, strText);
             // The first time through seems to be unreliable so don't use it.
             if (playback > 30)
             {
@@ -209,20 +212,20 @@ void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame)
 		        {
 			        max_rate = rate;
 		        }
-			    sprintf(szBuffer, "%.3f Mbps", rate);
-			    SetDlgItemText(hDlg, IDC_BITRATE, szBuffer);
-		        sprintf(szBuffer, "%.3f Mbps", max_rate);
-		        SetDlgItemText(hDlg, IDC_BITRATE_MAX, szBuffer);
-			    sprintf(szBuffer, "%.3f Mbps", rate_avg);
-			    SetDlgItemText(hDlg, IDC_BITRATE_AVG, szBuffer);
+				strText.Format(_T("%.3f Mbps"), rate);
+				SetDlgItemText(hDlg, IDC_BITRATE, strText);
+				strText.Format(_T("%.3f Mbps"), max_rate);
+				SetDlgItemText(hDlg, IDC_BITRATE_MAX, strText);
+				strText.Format(_T("%.3f Mbps"), rate_avg);
+				SetDlgItemText(hDlg, IDC_BITRATE_AVG, strText);
             }
 			Bitrate_Monitor = 0;
 			timing.mi = timing.ed;
 			Old_Playback = playback;
 		}
 
-		sprintf(szBuffer, "%s", d2v.type == I_TYPE ? "I" : (d2v.type == P_TYPE ? "P" : "B"));
-		SetDlgItemText(hDlg, IDC_CODING_TYPE, szBuffer);
+		strText.Format(_T("%s"), d2v.type == I_TYPE ? _T("I") : (d2v.type == P_TYPE ? _T("P") : _T("B")));
+		SetDlgItemText(hDlg, IDC_CODING_TYPE, strText);
 	}
 
 	if (progressive_sequence)

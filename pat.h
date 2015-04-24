@@ -36,7 +36,7 @@ class PATParser
 private:
 	enum operation {Dump=1, AudioType, InitialPids} op;
 	HWND hDialog;
-	char *filename;
+	CString filename;
 	unsigned int audio_pid;
 	unsigned int audio_type;
 	FILE *fin;
@@ -58,10 +58,10 @@ private:
 	int ProcessPSIPSection(void);
 public:
 	PATParser(void);
-	int DumpPAT(HWND hDialog, char *filename);
-	int DumpPSIP(HWND hDialog, char *filename);
-	int DumpRaw(HWND hDialog, char *filename);
-	int GetAudioType(char *filename, unsigned int audio_pid);
-	int DoInitialPids(char *filename);
+	int DumpPAT(HWND hDialog, LPCTSTR filename);
+	int DumpPSIP(HWND hDialog, LPCTSTR filename);
+	int DumpRaw(HWND hDialog, LPCTSTR filename);
+	int GetAudioType(LPCTSTR filename, unsigned int audio_pid);
+	int DoInitialPids(LPCTSTR filename);
 };
 

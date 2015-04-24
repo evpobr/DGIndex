@@ -191,7 +191,7 @@ do_rip_play:
 			if (_read(Infile[0], buf, 1) == 0)
 			{
 				// EOF
-				MessageBox(hWnd, "File contains all nulls!", NULL, MB_OK | MB_ICONERROR);
+				MessageBox(hWnd, _T("File contains all nulls!"), NULL, MB_OK | MB_ICONERROR);
 				return 0;
 			}
 			if (buf[0] != 0)
@@ -272,7 +272,7 @@ try_again:
 			if (Stop_Flag || count > 10000000)
 			{
 				// We didn't find a sequence header.
-				MessageBox(hWnd, "No video sequence header found!", NULL, MB_OK | MB_ICONERROR);
+				MessageBox(hWnd, _T("No video sequence header found!"), NULL, MB_OK | MB_ICONERROR);
 				ThreadKill(MISC_KILL);
 			}
 			Flush_Buffer(8);
@@ -284,9 +284,9 @@ try_again:
 		{
 			mpeg_type = IS_NOT_MPEG;
 			is_program_stream = 0;
-			if (initial_parse(Infilename[0], &mpeg_type, &is_program_stream) == -1)
+			if (initial_parse(Infilename[0], mpeg_type, is_program_stream) == -1)
 			{
-				MessageBox(hWnd, "Cannot find video stream!", NULL, MB_OK | MB_ICONERROR);
+				MessageBox(hWnd, _T("Cannot find video stream!"), NULL, MB_OK | MB_ICONERROR);
 				return 0;
 			}
 			if (is_program_stream)
@@ -332,18 +332,19 @@ try_again:
 		while (i)
 		{
 			if (FullPathInFiles)
-				fprintf(D2VFile, "%s\n", Infilename[NumLoadedFiles-i]);
+				_ftprintf(D2VFile, _T("%s\n"), Infilename[NumLoadedFiles-i]);
 			else
             {
-				char path[DG_MAX_PATH];
-				char* p = path;
+				TCHAR path[DG_MAX_PATH];
+				TCHAR* p = path;
 
                 if (!PathRelativePathTo(path, D2VFilePath, 0, Infilename[NumLoadedFiles-i], 0))
-					p = Infilename[NumLoadedFiles - i]; // different drives;
+					p = Infilename[NumLoadedFiles - i].GetBuffer(); // different drives;
                 // Delete leading ".\" if it is present.
-                if (p[0] == '.' && p[1] == '\\')
+				if (p[0] == _T('.') && p[1] == _T('\\'))
                     p += 2;
-				fprintf(D2VFile, "%s\n", p);
+				_ftprintf(D2VFile, _T("%s\n"), p);
+				Infilename[NumLoadedFiles - i].ReleaseBuffer();
 			}
 			i--;
 		}
@@ -378,9 +379,9 @@ try_again:
 		}
 
 		if (mpeg_type == IS_MPEG2)
-			fprintf(D2VFile, "Aspect_Ratio=%s\n", AspectRatio[aspect_ratio_information]);
+			_ftprintf(D2VFile, _T("Aspect_Ratio=%s\n"), AspectRatio[aspect_ratio_information]);
 		else
-			fprintf(D2VFile, "Aspect_Ratio=%s\n", AspectRatioMPEG1[aspect_ratio_information]);
+			_ftprintf(D2VFile, _T("Aspect_Ratio=%s\n"), AspectRatioMPEG1[aspect_ratio_information]);
 		fprintf(D2VFile, "Picture_Size=%dx%d\n", horizontal_size, vertical_size);
 		fprintf(D2VFile, "Field_Operation=%d\n", FO_Flag);
 		if (FO_Flag == FO_FILM)
