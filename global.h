@@ -50,6 +50,13 @@
 
 XTN bool bIsWindowsXPorLater;
 
+#define MAIN_FRAME_STYLE	WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX)
+#define TRACK_HEIGHT	32
+#define INIT_WIDTH		480
+#define INIT_HEIGHT		270
+#define MIN_WIDTH		160
+#define MIN_HEIGHT		32
+
 // Messages to the window procedure.
 #define CLI_RIP_MESSAGE				(WM_APP)
 #define D2V_DONE_MESSAGE			(WM_APP + 1)
@@ -336,6 +343,8 @@ XTN int HadAddDialog;
 XTN int hadRGoption;
 #define D2V_FILE_VERSION 16
 
+void ClientResize(HWND hWnd, int nWidth, int nHeight);
+
 XTN int WindowMode;
 XTN HWND hWnd, hDlg, hTrack;
 XTN HWND hwndSelect;
@@ -461,7 +470,6 @@ XTN CString mMRUList[4];
 #define MISC_KILL 0
 #define END_OF_DATA_KILL 1
 XTN void ThreadKill(int);
-XTN void ResizeWindow(int width, int height);
 XTN bool crop1088_warned, crop1088;
 XTN int LogQuants_Flag;
 XTN FILE *Quants;

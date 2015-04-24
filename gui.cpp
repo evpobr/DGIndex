@@ -42,12 +42,6 @@
 
 static TCHAR Version[] = _T("DGIndex 1.5.8");
 
-#define TRACK_HEIGHT	32
-#define INIT_WIDTH		480
-#define INIT_HEIGHT		270
-#define MIN_WIDTH		160
-#define MIN_HEIGHT		32
-
 #define MASKCOLOR		RGB(0, 6, 0)
 
 #define	SAVE_D2V		1
@@ -165,18 +159,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	// Get the path to the DGIndex executable.
 	GetModuleFileName(NULL, ExePath.GetBuffer(MAX_PATH - 1), DG_MAX_PATH);
 	ExePath.ReleaseBuffer();
-
-	// Find first char after last backslash.
-
-	int nLength = ExePath.GetLength();
-	if (ExePath[nLength - 1] == _T('\\'))
-	{		
-		ExePath.Truncate(nLength - 1);
-	}
+	CPath pathExe(ExePath);
+	pathExe.RemoveFileSpec();
+	ExePath = pathExe.m_strPath;
 
 	// Load INI
 	CPath pathIni;
-	pathIni.Combine(ExePath, _T("DGIndex.ini"));
+	pathIni.Combine(pathExe, _T("DGIndex.ini"));
 	LoadSettingsFromFile(pathIni);
 
 
@@ -203,7 +192,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	LoadString(hInst, IDC_GUI, szWindowClass, DG_MAX_PATH);
 	MyRegisterClass(hInst);
 
-	hWnd = CreateWindow(szWindowClass, _T("DGIndex"), WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX),
+	hWnd = CreateWindow(szWindowClass, _T("DGIndex"), MAIN_FRAME_STYLE,
 		CW_USEDEFAULT, 0, INIT_WIDTH, INIT_HEIGHT, NULL, NULL, hInst, NULL);
 
 	// Test CPU
@@ -264,34 +253,7 @@ TEST_END:
 	if (cpu.ssefpu)
 		CheckMenuItem(hMenu, IDM_SSEFPU, MF_CHECKED);
 
-	// Create control
-	hTrack = CreateWindow(TRACKBAR_CLASS, NULL,
-		WS_CHILD | WS_VISIBLE | WS_DISABLED | TBS_NOTICKS | TBS_TOP,
-		0, INIT_HEIGHT, INIT_WIDTH-4*TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU) ID_TRACKBAR, hInst, NULL);
-	SendMessage(hTrack, TBM_SETRANGE, (WPARAM) true, (LPARAM) MAKELONG(0, TRACK_PITCH));
-
-	hLeftButton = CreateWindow(_T("BUTTON"), _T("["),
-		WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
-		INIT_WIDTH-4*TRACK_HEIGHT, INIT_HEIGHT,
-		TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU) ID_LEFT_BUTTON, hInst, NULL);
-
-	hLeftArrow = CreateWindow(_T("BUTTON"), _T("<"),
-		WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
-		INIT_WIDTH-3*TRACK_HEIGHT, INIT_HEIGHT,
-		TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU) ID_LEFT_ARROW, hInst, NULL);
-
-	hRightArrow = CreateWindow(_T("BUTTON"), _T(">"),
-		WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
-		INIT_WIDTH-2*TRACK_HEIGHT, INIT_HEIGHT,
-		TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU) ID_RIGHT_ARROW, hInst, NULL);
-
-	hRightButton = CreateWindow(_T("BUTTON"), _T("]"),
-		WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
-		INIT_WIDTH-TRACK_HEIGHT, INIT_HEIGHT,
-		TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU) ID_RIGHT_BUTTON, hInst, NULL);
-
-	ResizeWindow(INIT_WIDTH, INIT_HEIGHT);
-	MoveWindow(hWnd, INIT_X, INIT_Y, INIT_WIDTH+Edge_Width, INIT_HEIGHT+Edge_Height+TRACK_HEIGHT+TRACK_HEIGHT/3, true);
+	ClientResize(hWnd, INIT_WIDTH, INIT_HEIGHT + TRACK_HEIGHT / 3 + TRACK_HEIGHT);
 
 	MPEG2_Transport_VideoPID = 2;
 	MPEG2_Transport_AudioPID = 2;
@@ -518,87 +480,115 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message)
 	{
-		case CLI_RIP_MESSAGE:
-			// The CLI-invoked LOCATE_INIT thread is finished.
-			// Kick off a LOCATE_RIP thread.
-			if (CLIPreview)
-				goto preview;
-			else
-				goto proceed;
+	case CLI_RIP_MESSAGE:
+		// The CLI-invoked LOCATE_INIT thread is finished.
+		// Kick off a LOCATE_RIP thread.
+		if (CLIPreview)
+			goto preview;
+		else
+			goto proceed;
 
-		case CLI_PREVIEW_DONE_MESSAGE:
-			// Destroy the Info dialog to generate the info log file.
-			DestroyWindow(hDlg);
-			if (ExitOnEnd)
-				exit(0);
-			break;
+	case CLI_PREVIEW_DONE_MESSAGE:
+		// Destroy the Info dialog to generate the info log file.
+		DestroyWindow(hDlg);
+		if (ExitOnEnd)
+			exit(0);
+		break;
 
-		case D2V_DONE_MESSAGE:
+	case D2V_DONE_MESSAGE:
+	{
+		TCHAR avsfile[DG_MAX_PATH];
+		LPTSTR path_p;
+
+		// Make an AVS file if it doesn't already exist and a template exists.
+		_tcscpy_s(avsfile, D2VFilePath);
+		path_p = _tcsrchr(avsfile, _T('.'));
+		_tcscpy(++path_p, _T("avs"));
+
+		MakeAvsFromTemplate(AVSTemplatePath, avsfile);
+
+		if (ExitOnEnd)
 		{
-			TCHAR avsfile[DG_MAX_PATH];
-			LPTSTR path_p;
-
-			// Make an AVS file if it doesn't already exist and a template exists.
-			_tcscpy_s(avsfile, D2VFilePath);
-			path_p = _tcsrchr(avsfile, _T('.'));
-			_tcscpy(++path_p, _T("avs"));
-
-			MakeAvsFromTemplate(AVSTemplatePath, avsfile);
-
-			if (ExitOnEnd)
-			{
-				if (Info_Flag)
-					DestroyWindow(hDlg);
-				exit(0);
-			}
-			else CLIActive = 0;
-			break;
+			if (Info_Flag)
+				DestroyWindow(hDlg);
+			exit(0);
 		}
+		else CLIActive = 0;
+		break;
+	}
 
-		case PROGRESS_MESSAGE: 
-			OutputProgress(wParam);
-			break;
+	case PROGRESS_MESSAGE:
+		OutputProgress(wParam);
+		break;
 
-		case WM_CREATE:
-			PreScale_Ratio = 1.0;
+	case WM_CREATE:
+	{
+		PreScale_Ratio = 1.0;
 
-			process.trackleft = 0;
-			process.trackright = TRACK_PITCH;
+		process.trackleft = 0;
+		process.trackright = TRACK_PITCH;
 
-			rwc.lpszClassName = TEXT("SelectControl");
-			rwc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-			rwc.style         = CS_HREDRAW;
-			rwc.lpfnWndProc   = SelectProc;
-			RegisterClass(&rwc);
+		rwc.lpszClassName = TEXT("SelectControl");
+		rwc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
+		rwc.style = CS_HREDRAW;
+		rwc.lpfnWndProc = SelectProc;
+		RegisterClass(&rwc);
 
-			hwndSelect = CreateWindowEx(0, TEXT("SelectControl"), NULL, 
-				WS_CHILD | WS_VISIBLE, 12, 108, 370, TRACK_HEIGHT/3, hWnd, NULL, NULL, NULL);
+		hwndSelect = CreateWindowEx(0, TEXT("SelectControl"), NULL,
+			WS_CHILD | WS_VISIBLE, 12, 108, 370, TRACK_HEIGHT / 3, hWnd, NULL, NULL, NULL);
 
-            hDC = GetDC(hWnd);
-			hMenu = GetMenu(hWnd);
-			hProcess = GetCurrentProcess();
+		// Create control
+		hTrack = CreateWindow(TRACKBAR_CLASS, NULL,
+			WS_CHILD | WS_VISIBLE | WS_DISABLED | TBS_NOTICKS | TBS_TOP,
+			0, 0, 0, 0, hWnd, (HMENU)ID_TRACKBAR, hInst, NULL);
+		SendMessage(hTrack, TBM_SETRANGE, (WPARAM)true, (LPARAM)MAKELONG(0, TRACK_PITCH));
 
-			// Load the splash screen from the file dgindex.bmp if it exists.
-			prog = ExePath;
-			prog += _T("dgindex.bmp");
-			splash = (HBITMAP) ::LoadImage (0, prog, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-//			if (splash == 0)
-//			{
-//				// No splash file. Use the built-in default splash screen.
-//				splash = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_SPLASH));
-//			}
+		hLeftButton = CreateWindow(_T("BUTTON"), _T("["),
+			WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
+			0, 0,
+			0, 0, hWnd, (HMENU)ID_LEFT_BUTTON, hInst, NULL);
 
-			//TODO: CAtlArray check it
-			// for (i=0; i<MAX_FILE_NUMBER; i++)
-				//Infilename[i] = (TCHAR*)malloc(DG_MAX_PATH * sizeof(TCHAR));
+		hLeftArrow = CreateWindow(_T("BUTTON"), _T("<"),
+			WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
+			INIT_WIDTH - 3 * TRACK_HEIGHT, INIT_HEIGHT,
+			TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU)ID_LEFT_ARROW, hInst, NULL);
 
-			for (i=0; i<8; i++)
-				block[i] = (short *)_aligned_malloc(sizeof(short)*64, 64);
+		hRightArrow = CreateWindow(_T("BUTTON"), _T(">"),
+			WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
+			INIT_WIDTH - 2 * TRACK_HEIGHT, INIT_HEIGHT,
+			TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU)ID_RIGHT_ARROW, hInst, NULL);
 
-			Initialize_FPU_IDCT();
+		hRightButton = CreateWindow(_T("BUTTON"), _T("]"),
+			WS_CHILD | WS_VISIBLE | WS_DLGFRAME | WS_DISABLED,
+			INIT_WIDTH - TRACK_HEIGHT, INIT_HEIGHT,
+			TRACK_HEIGHT, TRACK_HEIGHT, hWnd, (HMENU)ID_RIGHT_BUTTON, hInst, NULL);
 
-			// register VFAPI
-			RegisterVFAPI();
+		hDC = GetDC(hWnd);
+		hMenu = GetMenu(hWnd);
+		hProcess = GetCurrentProcess();
+
+		// Load the splash screen from the file dgindex.bmp if it exists.
+		prog = ExePath;
+		prog += _T("dgindex.bmp");
+		splash = (HBITMAP) ::LoadImage(0, prog, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		//			if (splash == 0)
+		//			{
+		//				// No splash file. Use the built-in default splash screen.
+		//				splash = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_SPLASH));
+		//			}
+
+		//TODO: CAtlArray check it
+		// for (i=0; i<MAX_FILE_NUMBER; i++)
+		//Infilename[i] = (TCHAR*)malloc(DG_MAX_PATH * sizeof(TCHAR));
+
+		for (i = 0; i < 8; i++)
+			block[i] = (short *)_aligned_malloc(sizeof(short) * 64, 64);
+
+		Initialize_FPU_IDCT();
+
+		// register VFAPI
+		RegisterVFAPI();
+	}
 
 		case WM_COMMAND:
         {
@@ -882,7 +872,7 @@ D2V_PROCESS:
 
 						while (i)
 						{
-
+							Infilename.Add();
 							_fgetts(Infilename[NumLoadedFiles - i].GetBuffer(DG_MAX_PATH - 1), DG_MAX_PATH - 1, D2VFile);
 							Infilename[NumLoadedFiles - i].ReleaseBuffer();
 							// Strip newline.
@@ -1862,6 +1852,15 @@ right_arrow:
 		case WM_SIZE:
 			if (!IsIconic(hWnd))
 			{
+				int width = LOWORD(lParam);
+				int height = HIWORD(lParam);
+				MoveWindow(hwndSelect, 0, height - TRACK_HEIGHT - TRACK_HEIGHT / 3, width, TRACK_HEIGHT / 3, true);
+				MoveWindow(hTrack, 0, height - TRACK_HEIGHT, width - 4 * TRACK_HEIGHT, TRACK_HEIGHT, true);
+				MoveWindow(hLeftButton, width - 4 * TRACK_HEIGHT, height - TRACK_HEIGHT, TRACK_HEIGHT, TRACK_HEIGHT, true);
+				MoveWindow(hLeftArrow, width - 3 * TRACK_HEIGHT, height - TRACK_HEIGHT, TRACK_HEIGHT, TRACK_HEIGHT, true);
+				MoveWindow(hRightArrow, width - 2 * TRACK_HEIGHT, height - TRACK_HEIGHT, TRACK_HEIGHT, TRACK_HEIGHT, true);
+				MoveWindow(hRightButton, width - TRACK_HEIGHT, height - TRACK_HEIGHT, TRACK_HEIGHT, TRACK_HEIGHT, true);
+
 				ShowInfo(false);
 				RefreshWindow(true);
 			}
@@ -1897,7 +1896,6 @@ right_arrow:
 			RefreshWindow(false);
 			break;
 			}
-
 		case WM_DROPFILES:
 		{
 			CString ext;
@@ -1978,35 +1976,36 @@ right_arrow:
 			break;
 		}
 		case WM_DESTROY:
-            Stop_Flag = 1;
-            WaitForSingleObject(hThread, 2000);
-            prog = ExePath;
-			prog += _T("DGIndex.ini");
-			SaveSettingsToFile(prog);
+		{
+			Stop_Flag = 1;
+			WaitForSingleObject(hThread, 2000);
+			CPath pathIni(ExePath);
+			pathIni.Append(_T("DGIndex.ini"));
+			SaveSettingsToFile(pathIni);
 
 			while (NumLoadedFiles)
 			{
 				NumLoadedFiles--;
 				_close(Infile[NumLoadedFiles]);
-               Infile[NumLoadedFiles] = NULL;
+				Infile[NumLoadedFiles] = NULL;
 			}
 
 			Recovery();
 
-			for (i=0; i<8; i++)
+			for (i = 0; i < 8; i++)
 				_aligned_free(block[i]);
 
 			// for (i=0; i<MAX_FILE_NUMBER; i++)
 			// 		Infilename[i].Empty();
 			Infilename.RemoveAll();
 
-            free(Rdbfr);
+			free(Rdbfr);
 
-	        DeleteObject(splash);
+			DeleteObject(splash);
 			ReleaseDC(hWnd, hDC);
 			PostQuitMessage(0);
 			break;
-
+		}
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -3564,6 +3563,7 @@ void Recovery()
 
 	SetWindowText(hWnd, _T("DGIndex"));
 
+
 	if (NumLoadedFiles)
 	{
 		ZeroMemory(&process, sizeof(process));
@@ -3579,8 +3579,7 @@ void Recovery()
 	}
 
 	InvalidateRect(hwndSelect, NULL, TRUE);
-	ResizeWindow(INIT_WIDTH, INIT_HEIGHT);
-	ResizeWindow(INIT_WIDTH, INIT_HEIGHT);	// 2-line menu antidote
+	ClientResize(hWnd, INIT_WIDTH, INIT_HEIGHT + TRACK_HEIGHT / 3 + TRACK_HEIGHT);
 
 	if (!CLIActive)
 		strOutput.Empty();
@@ -3593,23 +3592,6 @@ void Recovery()
         AddMRUList(Infilename[0]);
         UpdateMRUList();
     }
-}
-
-void ResizeWindow(int width, int height)
-{
-	MoveWindow(hTrack, 0, height+TRACK_HEIGHT/3, width-4*TRACK_HEIGHT, TRACK_HEIGHT, true);
-	MoveWindow(hwndSelect, 0, height, width, TRACK_HEIGHT/3, true);
-	MoveWindow(hLeftButton, width-4*TRACK_HEIGHT, height+TRACK_HEIGHT/3, TRACK_HEIGHT, TRACK_HEIGHT, true);
-	MoveWindow(hLeftArrow, width-3*TRACK_HEIGHT, height+TRACK_HEIGHT/3, TRACK_HEIGHT, TRACK_HEIGHT, true);
-	MoveWindow(hRightArrow, width-2*TRACK_HEIGHT, height+TRACK_HEIGHT/3, TRACK_HEIGHT, TRACK_HEIGHT, true);
-	MoveWindow(hRightButton, width-TRACK_HEIGHT, height+TRACK_HEIGHT/3, TRACK_HEIGHT, TRACK_HEIGHT, true);
-
-	GetWindowRect(hWnd, &wrect);
-	GetClientRect(hWnd, &crect);
-	Edge_Width = wrect.right - wrect.left - crect.right + crect.left;
-	Edge_Height = wrect.bottom - wrect.top - crect.bottom + crect.top;
-
-	MoveWindow(hWnd, wrect.left, wrect.top, width+Edge_Width, height+Edge_Height+TRACK_HEIGHT+TRACK_HEIGHT/3, true);
 }
 
 void RefreshWindow(bool update)
@@ -4388,4 +4370,16 @@ void RegisterVFAPI()
 			CheckMenuItem(hMenu, IDM_VFAPI, MF_CHECKED);
 		}
 	}
+}
+
+void ClientResize(HWND hWnd, int nWidth, int nHeight)
+{
+	RECT rcClient, rcWind;
+	POINT ptDiff;
+	GetClientRect(hWnd, &rcClient);
+	GetWindowRect(hWnd, &rcWind);
+	ptDiff.x = (rcWind.right - rcWind.left) - rcClient.right;
+	ptDiff.y = (rcWind.bottom - rcWind.top) - rcClient.bottom;
+	MoveWindow(hWnd, rcWind.left, rcWind.top, nWidth + ptDiff.x, nHeight + ptDiff.y, FALSE);
+	UpdateWindow(hWnd);
 }

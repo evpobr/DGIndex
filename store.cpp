@@ -97,13 +97,14 @@ void Write_Frame(unsigned char *src[], D2VData d2v, DWORD frame)
 
         if ((HDDisplay != HD_DISPLAY_FULL_SIZED) && (Clip_Width > MAX_WINDOW_WIDTH || Clip_Height > MAX_WINDOW_HEIGHT))
 		{
-			ResizeWindow(Clip_Width/2, Clip_Height/2);
-			ResizeWindow(Clip_Width/2, Clip_Height/2);
+			ClientResize(hWnd, Clip_Width / 2, Clip_Height / 2 + TRACK_HEIGHT / 3 + TRACK_HEIGHT);
 		}
 		else
 		{
-			ResizeWindow(Clip_Width, Clip_Height);
-			ResizeWindow(Clip_Width, Clip_Height);
+			ClientResize(hWnd, Clip_Width, Clip_Height + TRACK_HEIGHT / 3 + TRACK_HEIGHT);
+			RECT rc = { 0 };
+			rc.right = Clip_Width;
+			rc.bottom = Clip_Height;
 		}
 
 		ZeroMemory(&birgb, sizeof(BITMAPINFOHEADER));

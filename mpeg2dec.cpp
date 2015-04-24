@@ -379,9 +379,9 @@ try_again:
 		}
 
 		if (mpeg_type == IS_MPEG2)
-			fprintf(D2VFile, "Aspect_Ratio=%s\n", AspectRatio[aspect_ratio_information]);
+			_ftprintf(D2VFile, _T("Aspect_Ratio=%s\n"), AspectRatio[aspect_ratio_information]);
 		else
-			fprintf(D2VFile, "Aspect_Ratio=%s\n", AspectRatioMPEG1[aspect_ratio_information]);
+			_ftprintf(D2VFile, _T("Aspect_Ratio=%s\n"), AspectRatioMPEG1[aspect_ratio_information]);
 		fprintf(D2VFile, "Picture_Size=%dx%d\n", horizontal_size, vertical_size);
 		fprintf(D2VFile, "Field_Operation=%d\n", FO_Flag);
 		if (FO_Flag == FO_FILM)
