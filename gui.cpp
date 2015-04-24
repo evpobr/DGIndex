@@ -1852,6 +1852,7 @@ right_arrow:
 		case WM_SIZE:
 			if (!IsIconic(hWnd))
 			{
+				UpdateWindow(hWnd);
 				int width = LOWORD(lParam);
 				int height = HIWORD(lParam);
 				MoveWindow(hwndSelect, 0, height - TRACK_HEIGHT - TRACK_HEIGHT / 3, width, TRACK_HEIGHT / 3, true);
@@ -4381,5 +4382,4 @@ void ClientResize(HWND hWnd, int nWidth, int nHeight)
 	ptDiff.x = (rcWind.right - rcWind.left) - rcClient.right;
 	ptDiff.y = (rcWind.bottom - rcWind.top) - rcClient.bottom;
 	MoveWindow(hWnd, rcWind.left, rcWind.top, nWidth + ptDiff.x, nHeight + ptDiff.y, FALSE);
-	UpdateWindow(hWnd);
 }
