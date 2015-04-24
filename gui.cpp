@@ -193,7 +193,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	MyRegisterClass(hInst);
 
 	hWnd = CreateWindow(szWindowClass, _T("DGIndex"), MAIN_FRAME_STYLE,
-		CW_USEDEFAULT, 0, INIT_WIDTH, INIT_HEIGHT, NULL, NULL, hInst, NULL);
+		INIT_X, INIT_Y, INIT_WIDTH, INIT_HEIGHT, NULL, NULL, hInst, NULL);
 
 	// Test CPU
 	__asm
